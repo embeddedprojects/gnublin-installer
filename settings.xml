@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<installer>
+  <settings>
+    <hidedevice>true</hidedevice>
+    <hidesize>16</hidesize>
+    <bootsector>16</bootsector>
+    <checkroot>true</checkroot>
+  </settings>
+  <url>
+    <display>GNUBLIN page</display>
+    <kernel>http://www.gnublin.org/downloads/kernel-2.6.33/zImage</kernel>
+    <bootloader>http://www.gnublin.org/downloads/apex/apex.bin</bootloader>
+    <rootfs>http://www.gnublin.org/downloads/rootfs.tar.gz</rootfs>
+  </url>
+</installer>
