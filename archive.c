@@ -28,11 +28,7 @@ int extract_archive(const char* filename, const char* to_path) {
 
       char command[1000];
     
-    sprintf(command, "tar -xzvf %s -C /usr/share/gnublin-installer/linux",filename);
-
-    printf("Filename is:\n%s \n",filename);
-    printf("Tar command is:\n%s \n",command);    
-  
+    sprintf(command, "tar -xzvf %s -C %s",filename,to_path);
     system(command);
   
   

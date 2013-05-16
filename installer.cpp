@@ -33,6 +33,8 @@
 #include "backup.h"
 #include "installer.h"
 
+#define mount_point "/tmp/SDCard"
+
 IMPLEMENT_APP(installer);
 
 Window* frame;
@@ -852,7 +854,6 @@ void Window::DoInstall(wxCommandEvent& event) {
       }
     }
   }
-
   // create partitions
   if(repartition) {
     i->AddLog(_("Creating partitions"));
@@ -877,38 +878,48 @@ void Window::DoInstall(wxCommandEvent& event) {
   total_progress += prog_part;
   i->SetProgress(total_progress);
 
-  mkdir("linux", 0777);
-  wxString linux_part = device + _("1");
-  mount_partition(C_STR(linux_part), "linux");
+  mkdir(mount_point, 0777);
+  wxString linux_part;
+  if(device.Contains(_("mmc"))){
+  	linux_part = device + _("p1");
+  }
+  else 
+  	linux_part = device + _("1");
+  mount_partition(C_STR(linux_part), mount_point);
 
   if(!is_mounted(C_STR(linux_part))) {
     i->AddLog(_("ERROR: can not mount filesystem"));
-
     return;
   }
-
   // extract rootfs
   if(write_rootfs) {
     i->AddLog(_("Extracting RootFS"));
     total_progress += prog_part;
     i->SetProgress(total_progress);
 
-    extract_archive(C_STR(rootfs_file), "linux");
+    extract_archive(C_STR(rootfs_file), mount_point);
   }
+
+std::cout << "copy rootfs done! starting copy kernel" << std::endl;
 
   // copy kernel
   i->AddLog(_("Copying kernel"));
   total_progress += prog_part;
   i->SetProgress(total_progress);
+  wxString mnt_point = _(mount_point);
+  wxString kernel_output_file = mnt_point + _("zImage");
+  copy_file(C_STR(kernel_file), C_STR(kernel_output_file));
 
-  copy_file(C_STR(kernel_file), "linux/zImage");
+std::cout << "copy kernel done! unmount ..." << std::endl;
 
   // unmount
   i->AddLog(_("Unmounting Linux partition"));
   total_progress += prog_part;
   i->SetProgress(total_progress);
 
-  unmount_partition("linux");
+  unmount_partition(C_STR(linux_part));
+
+std::cout << "unmount done! sync ..." << std::endl;
 
   // sync
   i->AddLog(_("Syncing"));
@@ -916,6 +927,8 @@ void Window::DoInstall(wxCommandEvent& event) {
   i->SetProgress(total_progress);
 
   sync_card();
+
+std::cout << "sync done!" << std::endl;
 
   i->AddLog(_("Done!"));
   i->AddLog(_("You may close this window now."));

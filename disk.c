@@ -110,15 +110,14 @@ int create_partitions(const char* dev, unsigned long bootsector_size) {
   PedFileSystemType* fs_type;
   PedTimer* timer;
 
-  sprintf(command2, "tune2fs -j -L Gnublin %s1",dev);
-
-
+  printf("create partitions started! ped_device_get...\n dev = %s\n",dev);
   // get device from string e.g. "/dev/sdd"
   device = ped_device_get(dev);
   if(device == NULL) {
     return 0;
   }
 
+  printf("ped_device_get done! create new partition table...\n");
   // create new partition table
   disk = ped_disk_new_fresh(device, ped_disk_type_get("msdos"));
   if(disk == NULL) {
@@ -126,31 +125,44 @@ int create_partitions(const char* dev, unsigned long bootsector_size) {
     return 0;
   }
 
+  printf("partition table done! get file system type...\n");
   // get file system type (ext2)
   fs_type = ped_file_system_type_get(FILE_SYSTEM);
 
+  printf("get file system done! create partitions...\n");
   // create partitions
   boot_part = ped_partition_new(disk, PED_PARTITION_NORMAL, fs_type, 0, bootsector_size / device->sector_size);
   linux_part = ped_partition_new(disk, PED_PARTITION_NORMAL, fs_type, bootsector_size / device->sector_size, device->length - 1);
 
+  printf("create partitions done! add partitions to partition table...\n");
   // add partitions to partition table
   PedConstraint* constraint = ped_constraint_any(device);
   ped_disk_add_partition(disk, linux_part, constraint);
   ped_disk_add_partition(disk, boot_part, constraint);
   ped_constraint_destroy(constraint);
 
+  printf("add partitions done! create timer...\n");
   // create timer
   timer = ped_timer_new(create_ext2_timer, NULL);
 
+  printf("create timer done! create filesystem...\n");
   // create filesystem
   ped_file_system_create(&linux_part->geom, fs_type, timer);
 
+  printf("create filesystem done! commit to hardware...\n");
   // commit to hardware
   ped_disk_commit_to_dev(disk);
   ped_disk_commit_to_os(disk);
 
+  printf("commit to hardware done! tune2fs (ext3&lable Gnublin) ...\n");
+  if(strcmp(dev, "/dev/mmcblk0")==0){
+  	sprintf(command2, "tune2fs -j -L Gnublin %sp1",dev);
+  }
+  else
+	sprintf(command2, "tune2fs -j -L Gnublin %s1",dev);
   system(command2);
 
+  printf("tune2fs done! create partitions finished!\n");
   return 1;
 }
 
