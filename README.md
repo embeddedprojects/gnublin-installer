@@ -1,2 +1,11 @@
 gnublin-installer
 =================
+
+Dependencies:
+
+- libarchive-dev
+- libcurl3-dev
+- libparted0debian1
+- libwxgtk2.8-dev
+
+`sudo apt-get install libparted0debian1 libcurl3-dev libwxgtk2.8-dev libarchive-dev`
