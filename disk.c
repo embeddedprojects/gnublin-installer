@@ -129,7 +129,7 @@ int create_partitions(const char* dev, unsigned long bootsector_size) {
   // get file system type (ext2)
   fs_type = ped_file_system_type_get(FILE_SYSTEM);
 
-  printf("get file system done! create partitions...\n");
+  printf("get file system type done! create partitions...\n");
   // create partitions
   boot_part = ped_partition_new(disk, PED_PARTITION_NORMAL, fs_type, 0, bootsector_size / device->sector_size);
   linux_part = ped_partition_new(disk, PED_PARTITION_NORMAL, fs_type, bootsector_size / device->sector_size, device->length - 1);

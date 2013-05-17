@@ -70,7 +70,7 @@ release: gnublin-installer
 	echo "Priority: optional" >> deb/DEBIAN/control
 	echo "Architecture: i386" >> deb/DEBIAN/control
 	echo "Essential: no" >> deb/DEBIAN/control
-	echo "Depends: libparted0debian1, libcurl3, libwxgtk2.8-0, libarchive12" >> deb/DEBIAN/control
+	echo "Depends: " >> deb/DEBIAN/control
 	echo "Installed-Size: $(DEBSIZE)" >> deb/DEBIAN/control
 	echo "Maintainer: Michael Schwarz <michael.schwarz91@gmail.com>" >> deb/DEBIAN/control
 	echo "Description: Graphical installer for GNUBLIN embedded Linux board" >> deb/DEBIAN/control
