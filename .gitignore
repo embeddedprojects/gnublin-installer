@@ -1,0 +1,9 @@
+# ignore auto-generated backups (gedit, maybe also others?)
+*~
+
+# ignore build fragments
+*.o
+
+# ignore build binaries
+gnublin-cmdline
+gnublin-installer
