@@ -164,8 +164,7 @@ Window::Window(wxFrame* frame, const wxString& title) : wxFrame(frame, -1, title
   mitem_settings = new wxMenuItem(menu_installer, wxID_ANY, wxString(_("Settings")) , wxEmptyString, wxITEM_NORMAL);
   menu_installer->Append(mitem_settings);
 
-  wxMenuItem* m_separator1;
-  m_separator1 = menu_installer->AppendSeparator();
+  menu_installer->AppendSeparator();
 
   wxMenuItem* mitem_quit;
   mitem_quit = new wxMenuItem(menu_installer, wxID_ANY, wxString(_("Quit")) + wxT('\t') + wxT("Q"), wxEmptyString, wxITEM_NORMAL);
@@ -530,13 +529,13 @@ void Window::StopBackup() {
 void Window::CopyDevice(FILE* in, FILE* out, long long kbytes, BackupProgress* b) {
   int blocksize = 1024 * 1024;
   char* buffer = (char*)malloc(blocksize);
-  unsigned long read, total = 0;
+  unsigned long total = 0;
   long long dev_size = kbytes;
 
   long start_time = time(NULL);
 
   while(!feof(in)) {
-    read = fread(buffer, blocksize, 1, in);
+    fread(buffer, blocksize, 1, in);
     fwrite(buffer, blocksize, 1, out);
     total++;
 

@@ -304,10 +304,10 @@ unsigned long dd(const char* input, const char* output, unsigned long blocksize)
   }
 
   char* buffer = (char*)malloc(blocksize);
-  unsigned long read, total = 0;
+  unsigned long total = 0;
 
   while(!feof(in)) {
-    read = fread(buffer, blocksize, 1, in);
+    fread(buffer, blocksize, 1, in);
     fwrite(buffer, blocksize, 1, out);
     total += blocksize;
   }

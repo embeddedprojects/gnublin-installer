@@ -274,14 +274,14 @@ int main(int argc, char* argv[]) {
 void copy_device(FILE* in, FILE* out, long long kbytes, bool verbose) {
   int blocksize = 1024 * 1024;
   char* buffer = (char*)malloc(blocksize);
-  unsigned long read, total = 0;
+  unsigned long total = 0;
   long long dev_size = kbytes;
 
   //long start_time = time(NULL);
   int last_ten = 0;
 
   while(!feof(in)) {
-    read = fread(buffer, blocksize, 1, in);
+    fread(buffer, blocksize, 1, in);
     fwrite(buffer, blocksize, 1, out);
     total++;
 
