@@ -53,9 +53,12 @@ class Window: public wxFrame {
     unsigned long hidesize;
     bool hidedevice;
     bool checkroot;
-    char url_kernel[512];
-    char url_bootloader[512];
-    char url_rootfs[512];
+    char url_kernel_32mb[512];
+    char url_bootloader_32mb[512];
+    char url_rootfs_32mb[512];
+    char url_kernel_8mb[512];
+    char url_bootloader_8mb[512];
+    char url_rootfs_8mb[512];
     wxString display_url;
     volatile int stop_backup;
 
@@ -72,6 +75,8 @@ class Window: public wxFrame {
     wxRadioButton* root_net;
     wxRadioButton* root_file;
     wxFilePickerCtrl* file_rootfs;
+    wxRadioButton* board_32mb;
+    wxRadioButton* board_8mb;
     wxRadioButton* krnl_net;
     wxRadioButton* krnl_file;
     wxFilePickerCtrl* file_zimage;

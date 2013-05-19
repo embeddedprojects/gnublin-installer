@@ -48,7 +48,7 @@ bool installer::OnInit() {
 Window::Window(wxFrame* frame, const wxString& title) : wxFrame(frame, -1, title) {
   ReadURLs();
 
-  this->SetSizeHints(640, 510);
+  this->SetSizeHints(640, 530);
 
   wxBoxSizer* main_sizer;
   main_sizer = new wxBoxSizer(wxVERTICAL);
@@ -63,91 +63,112 @@ Window::Window(wxFrame* frame, const wxString& title) : wxFrame(frame, -1, title
   main_sizer->Add(listctrl_device, 0, wxALL | wxEXPAND, 5);
 
   check_repartition = new wxCheckBox(this, wxID_ANY, _("Re-Partition"), wxDefaultPosition, wxDefaultSize, 0);
-  check_repartition->SetValue(true);
+  check_repartition->SetValue(false);
   main_sizer->Add(check_repartition, 0, wxALL, 5);
 
   line_1 = new wxStaticLine(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLI_HORIZONTAL);
   main_sizer->Add(line_1, 0, wxEXPAND | wxALL, 5);
 
-  wxGridSizer* bl_krnl_sizer;
-  bl_krnl_sizer = new wxGridSizer(1, 2, 0, 0);
 
-  wxStaticBoxSizer* layout_bootloader;
-  layout_bootloader = new wxStaticBoxSizer(new wxStaticBox(this, wxID_ANY, _("Bootloader")), wxVERTICAL);
+  	wxGridSizer* bl_krnl_sizer;
+	bl_krnl_sizer = new wxGridSizer( 1, 2, 0, 0 );
+	
+	wxStaticBoxSizer* layout_bootloader;
+	layout_bootloader = new wxStaticBoxSizer( new wxStaticBox( this, wxID_ANY, _("Bootloader") ), wxVERTICAL );
+	
+	boot_no_change = new wxRadioButton( this, wxID_ANY, _("do not change"), wxDefaultPosition, wxDefaultSize, wxRB_GROUP );
+	layout_bootloader->Add( boot_no_change, 0, wxALL, 5 );
+	
+	boot_net = new wxRadioButton( this, wxID_ANY, _("fetch from http://gnublin.org/"), wxDefaultPosition, wxDefaultSize, 0 );
+	layout_bootloader->Add( boot_net, 0, wxALL, 5 );
+	
+	wxFlexGridSizer* sizer_boot;
+	sizer_boot = new wxFlexGridSizer( 1, 2, 0, 0 );
+	sizer_boot->AddGrowableCol( 1 );
+	sizer_boot->SetFlexibleDirection( wxBOTH );
+	sizer_boot->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
+	
+	boot_file = new wxRadioButton( this, wxID_ANY, _("use file"), wxDefaultPosition, wxDefaultSize, 0 );
+	sizer_boot->Add( boot_file, 0, wxALL, 5 );
+	
+	file_bootloader = new wxFilePickerCtrl( this, wxID_ANY, wxEmptyString, _("Select a file"), wxT("*"), wxDefaultPosition, wxSize( -1,-1 ), wxFLP_DEFAULT_STYLE|wxFLP_FILE_MUST_EXIST|wxFLP_OPEN );
+	sizer_boot->Add( file_bootloader, 0, wxALL|wxEXPAND, 5 );
+	
+	layout_bootloader->Add( sizer_boot, 0, wxEXPAND, 5 );
+	
+	bl_krnl_sizer->Add( layout_bootloader, 0, wxALL|wxEXPAND, 5 );
+	
+	wxStaticBoxSizer* layout_rootfs;
+	layout_rootfs = new wxStaticBoxSizer( new wxStaticBox( this, wxID_ANY, _("RootFS") ), wxVERTICAL );
+	
+	root_no_change = new wxRadioButton( this, wxID_ANY, _("do not change"), wxDefaultPosition, wxDefaultSize, wxRB_GROUP );
+	layout_rootfs->Add( root_no_change, 0, wxALL, 5 );
+	
+	root_net = new wxRadioButton( this, wxID_ANY, _("fetch from http://gnublin.org/"), wxDefaultPosition, wxDefaultSize, 0 );
+	layout_rootfs->Add( root_net, 0, wxALL, 5 );
+	
+	wxFlexGridSizer* sizer_root;
+	sizer_root = new wxFlexGridSizer( 1, 2, 0, 0 );
+	sizer_root->AddGrowableCol( 1 );
+	sizer_root->SetFlexibleDirection( wxBOTH );
+	sizer_root->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
+	
+	root_file = new wxRadioButton( this, wxID_ANY, _("use file"), wxDefaultPosition, wxDefaultSize, 0 );
+	sizer_root->Add( root_file, 0, wxALL, 5 );
+	
+	file_rootfs = new wxFilePickerCtrl( this, wxID_ANY, wxEmptyString, _("Select a file"), wxT("*"), wxDefaultPosition, wxSize( -1,-1 ), wxFLP_DEFAULT_STYLE|wxFLP_FILE_MUST_EXIST|wxFLP_OPEN );
+	sizer_root->Add( file_rootfs, 0, wxALL|wxEXPAND, 5 );
+	
+	layout_rootfs->Add( sizer_root, 0, wxEXPAND, 5 );
+	
+	bl_krnl_sizer->Add( layout_rootfs, 0, wxEXPAND|wxALL, 5 );
+	
+	main_sizer->Add( bl_krnl_sizer, 0, wxEXPAND, 5 );
+	
+	wxGridSizer* krnl_board_sizer;
+	krnl_board_sizer = new wxGridSizer( 1, 2, 0, 0 );
+	
+	wxStaticBoxSizer* layout_kernel;
+	layout_kernel = new wxStaticBoxSizer( new wxStaticBox( this, wxID_ANY, _("Kernel") ), wxVERTICAL );
+	
+	kernel_no_change = new wxRadioButton( this, wxID_ANY, _("do not change"), wxDefaultPosition, wxDefaultSize, wxRB_GROUP );
+	layout_kernel->Add( kernel_no_change, 0, wxALL, 5 );
+	
+	krnl_net = new wxRadioButton( this, wxID_ANY, _("fetch from http://gnublin.org/"), wxDefaultPosition, wxDefaultSize, 0 );
+	layout_kernel->Add( krnl_net, 0, wxALL, 5 );
+	
+	wxFlexGridSizer* sizer_kernel;
+	sizer_kernel = new wxFlexGridSizer( 1, 2, 0, 0 );
+	sizer_kernel->AddGrowableCol( 1 );
+	sizer_kernel->SetFlexibleDirection( wxBOTH );
+	sizer_kernel->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_ALL );
+	
+	krnl_file = new wxRadioButton( this, wxID_ANY, _("use file"), wxDefaultPosition, wxDefaultSize, 0 );
+	sizer_kernel->Add( krnl_file, 0, wxALL, 5 );
+	
+	file_zimage = new wxFilePickerCtrl( this, wxID_ANY, wxEmptyString, _("Select a file"), wxT("*"), wxDefaultPosition, wxSize( -1,-1 ), wxFLP_DEFAULT_STYLE|wxFLP_FILE_MUST_EXIST|wxFLP_OPEN );
+	sizer_kernel->Add( file_zimage, 1, wxALL|wxEXPAND, 5 );
+	
+	layout_kernel->Add( sizer_kernel, 0, wxEXPAND, 5 );
+	
+	krnl_board_sizer->Add( layout_kernel, 0, wxALL|wxEXPAND, 5 );
+	
+	wxStaticBoxSizer* sizer_board;
+	sizer_board = new wxStaticBoxSizer( new wxStaticBox( this, wxID_ANY, _("Board type (Downloadfiles)") ), wxVERTICAL );
+	
+	board_32mb = new wxRadioButton( this, wxID_ANY, _("32 MB"), wxDefaultPosition, wxDefaultSize, wxRB_GROUP );
+	sizer_board->Add( board_32mb, 0, wxALL, 5 );
+	
+	board_8mb = new wxRadioButton( this, wxID_ANY, _("8 MB"), wxDefaultPosition, wxDefaultSize, 0 );
+	sizer_board->Add( board_8mb, 0, wxALL, 5 );
+	
+	krnl_board_sizer->Add( sizer_board, 0, wxALL|wxEXPAND, 5 );
+	
+	main_sizer->Add( krnl_board_sizer, 0, wxEXPAND, 5 );
 
-  boot_no_change = new wxRadioButton(this, wxID_ANY, _("do not change"), wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
-  layout_bootloader->Add(boot_no_change, 0, wxALL, 5);
 
-  boot_net = new wxRadioButton(this, wxID_ANY, _("fetch from http://gnublin.org/"), wxDefaultPosition, wxDefaultSize, 0);
-  layout_bootloader->Add(boot_net, 0, wxALL, 5);
 
-  wxFlexGridSizer* sizer_boot;
-  sizer_boot = new wxFlexGridSizer(1, 2, 0, 0);
-  sizer_boot->AddGrowableCol(1);
-  sizer_boot->SetFlexibleDirection(wxBOTH);
-  sizer_boot->SetNonFlexibleGrowMode(wxFLEX_GROWMODE_SPECIFIED);
 
-  boot_file = new wxRadioButton(this, wxID_ANY, _("use file"), wxDefaultPosition, wxDefaultSize, 0);
-  sizer_boot->Add(boot_file, 0, wxALL, 5);
-
-  file_bootloader = new wxFilePickerCtrl(this, wxID_ANY, wxEmptyString, _("Select a file"), wxT("*"), wxDefaultPosition, wxSize(-1, -1), wxFLP_DEFAULT_STYLE | wxFLP_FILE_MUST_EXIST | wxFLP_OPEN);
-  sizer_boot->Add(file_bootloader, 0, wxALL | wxEXPAND, 5);
-
-  layout_bootloader->Add(sizer_boot, 0, wxEXPAND, 5);
-
-  bl_krnl_sizer->Add(layout_bootloader, 0, wxALL | wxEXPAND, 5);
-
-  wxStaticBoxSizer* layout_rootfs;
-  layout_rootfs = new wxStaticBoxSizer(new wxStaticBox(this, wxID_ANY, _("RootFS")), wxVERTICAL);
-
-  root_no_change = new wxRadioButton(this, wxID_ANY, _("do not change"), wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
-  layout_rootfs->Add(root_no_change, 0, wxALL, 5);
-
-  root_net = new wxRadioButton(this, wxID_ANY, _("fetch from http://gnublin.org/"), wxDefaultPosition, wxDefaultSize, 0);
-  layout_rootfs->Add(root_net, 0, wxALL, 5);
-
-  wxFlexGridSizer* sizer_root;
-  sizer_root = new wxFlexGridSizer(1, 2, 0, 0);
-  sizer_root->AddGrowableCol(1);
-  sizer_root->SetFlexibleDirection(wxBOTH);
-  sizer_root->SetNonFlexibleGrowMode(wxFLEX_GROWMODE_SPECIFIED);
-
-  root_file = new wxRadioButton(this, wxID_ANY, _("use file"), wxDefaultPosition, wxDefaultSize, 0);
-  sizer_root->Add(root_file, 0, wxALL, 5);
-
-  file_rootfs = new wxFilePickerCtrl(this, wxID_ANY, wxEmptyString, _("Select a file"), wxT("*"), wxDefaultPosition, wxSize(-1, -1), wxFLP_DEFAULT_STYLE | wxFLP_FILE_MUST_EXIST | wxFLP_OPEN);
-  sizer_root->Add(file_rootfs, 0, wxALL | wxEXPAND, 5);
-
-  layout_rootfs->Add(sizer_root, 0, wxEXPAND, 5);
-
-  bl_krnl_sizer->Add(layout_rootfs, 0, wxEXPAND | wxALL, 5);
-
-  main_sizer->Add(bl_krnl_sizer, 0, wxEXPAND, 5);
-
-  wxStaticBoxSizer* layout_kernel;
-  layout_kernel = new wxStaticBoxSizer(new wxStaticBox(this, wxID_ANY, _("Kernel")), wxVERTICAL);
-
-  kernel_no_change = new wxRadioButton(this, wxID_ANY, _("do not change"), wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
-  layout_kernel->Add(kernel_no_change, 0, wxALL, 5);
-
-  krnl_net = new wxRadioButton(this, wxID_ANY, _("fetch from http://gnublin.org/"), wxDefaultPosition, wxDefaultSize, 0);
-  layout_kernel->Add(krnl_net, 0, wxALL, 5);
-
-  wxFlexGridSizer* sizer_kernel;
-  sizer_kernel = new wxFlexGridSizer(1, 2, 0, 0);
-  sizer_kernel->AddGrowableCol(1);
-  sizer_kernel->SetFlexibleDirection(wxBOTH);
-  sizer_kernel->SetNonFlexibleGrowMode(wxFLEX_GROWMODE_ALL);
-
-  krnl_file = new wxRadioButton(this, wxID_ANY, _("use file"), wxDefaultPosition, wxDefaultSize, 0);
-  sizer_kernel->Add(krnl_file, 0, wxALL, 5);
-
-  file_zimage = new wxFilePickerCtrl(this, wxID_ANY, wxEmptyString, _("Select a file"), wxT("*"), wxDefaultPosition, wxSize(-1, -1), wxFLP_DEFAULT_STYLE | wxFLP_FILE_MUST_EXIST | wxFLP_OPEN);
-  sizer_kernel->Add(file_zimage, 1, wxALL | wxEXPAND, 5);
-
-  layout_kernel->Add(sizer_kernel, 0, wxEXPAND, 5);
-
-  main_sizer->Add(layout_kernel, 0, wxALL | wxEXPAND, 5);
 
   btn_apply = new wxStdDialogButtonSizer();
   btn_applyApply = new wxButton(this, wxID_APPLY);
@@ -439,29 +460,48 @@ void Window::ReadURLs() {
       wxXmlNode* s_child = child->GetChildren();
 
       while(s_child) {
+        wxString board_file;
 
-        // get kernel url
-        if(s_child->GetName() == wxT("kernel")) {
+ 				// get kernel url
+        if(s_child->GetName() == wxT("kernel_32mb")) {
           wxString k = s_child->GetNodeContent();
-          printf("kernel url: %s\n", C_STR(k));
+          printf("kernel 32mb url: %s\n", C_STR(k));
 
-          strcpy(url_kernel, C_STR(k));
+          strcpy(url_kernel_32mb, C_STR(k));
+        }
+        if(s_child->GetName() == wxT("kernel_8mb")) {
+          wxString k = s_child->GetNodeContent();
+          printf("kernel 8mb url: %s\n", C_STR(k));
+
+          strcpy(url_kernel_8mb, C_STR(k));
         }
 
         // get bootloader url
-        if(s_child->GetName() == wxT("bootloader")) {
+        if(s_child->GetName() == wxT("bootloader_32mb")) {
           wxString b = s_child->GetNodeContent();
-          printf("bootloader url: %s\n", C_STR(b));
+          printf("bootloader 32mb url: %s\n", C_STR(b));
 
-          strcpy(url_bootloader, C_STR(b));
+          strcpy(url_bootloader_32mb, C_STR(b));
+        }
+        if(s_child->GetName() == wxT("bootloader_8mb")) {
+          wxString k = s_child->GetNodeContent();
+          printf("bootloader 8mb url: %s\n", C_STR(k));
+
+          strcpy(url_bootloader_8mb, C_STR(k));
         }
 
         // get rootfs url
-        if(s_child->GetName() == wxT("rootfs")) {
+        if(s_child->GetName() == wxT("rootfs_32mb")) {
           wxString r = s_child->GetNodeContent();
-          printf("rootfs url: %s\n", C_STR(r));
+          printf("rootfs 32mb url: %s\n", C_STR(r));
 
-          strcpy(url_rootfs, C_STR(r));
+          strcpy(url_rootfs_32mb, C_STR(r));
+        }
+        if(s_child->GetName() == wxT("rootfs_8mb")) {
+          wxString r = s_child->GetNodeContent();
+          printf("rootfs 8mb url: %s\n", C_STR(r));
+
+          strcpy(url_rootfs_8mb, C_STR(r));
         }
 
         // display
@@ -487,6 +527,8 @@ void Window::EnableGUI(bool enabled) {
   krnl_net->Enable(enabled);
   krnl_file->Enable(enabled);
   file_zimage->Enable(enabled);
+  board_8mb->Enable(enabled);
+  board_32mb->Enable(enabled);
   root_no_change->Enable(enabled);
   kernel_no_change->Enable(enabled);
   root_net->Enable(enabled);
@@ -710,7 +752,7 @@ void Window::DoInstall(wxCommandEvent& event) {
   }
 
   // do you really want to do this, user?
-  if(wxMessageBox(_("Do you really want to do this?\nThis destroys all the data on this device!"), _("Warning"), wxYES_NO | wxICON_EXCLAMATION | wxNO_DEFAULT) == wxNO) {
+  if(wxMessageBox(_("Do you really want to do this?\nThis may destroy all the data on this device!"), _("Warning"), wxYES_NO | wxICON_EXCLAMATION | wxNO_DEFAULT) == wxNO) {
     return;
   }
 
@@ -732,6 +774,7 @@ void Window::DoInstall(wxCommandEvent& event) {
   bool file_bootl;
   wxString bootloader_file;
   bool dl_kernel;
+  bool write_kernel;
   wxString kernel_file;
   bool dl_rootfs;
   bool write_rootfs;
@@ -754,6 +797,8 @@ void Window::DoInstall(wxCommandEvent& event) {
   if(file_bootl) {
     bootloader_file = file_bootloader->GetPath();
   }
+  //write kernel?
+  write_kernel = !kernel_no_change->GetValue();
   // download kernel?
   dl_kernel = krnl_net->GetValue();
   kernel_file = file_zimage->GetPath();
@@ -787,6 +832,9 @@ void Window::DoInstall(wxCommandEvent& event) {
   if(write_rootfs) {
     parts++;
   }
+  if(write_kernel) {
+    parts++;
+  }
 
   int prog_part = 100 / parts;
   int total_progress = 0;
@@ -800,9 +848,14 @@ void Window::DoInstall(wxCommandEvent& event) {
   // download bootloader
   if(dl_bootl) {
     mkdir("files", 0777);
-
-    i->AddLog(_("Downloading bootloader (") + wxString::FromAscii(url_bootloader) + _(")"));
-    get_file(url_bootloader, "files/apex.bin");
+		if(board_32mb->GetValue()){
+		  i->AddLog(_("Downloading bootloader (") + wxString::FromAscii(url_bootloader_32mb) + _(")"));
+		  get_file(url_bootloader_32mb, "files/apex.bin");
+		}
+		else if(board_8mb->GetValue()){
+		  i->AddLog(_("Downloading bootloader (") + wxString::FromAscii(url_bootloader_8mb) + _(")"));
+		  get_file(url_bootloader_8mb, "files/apex.bin");
+		}
     total_progress += prog_part;
     i->SetProgress(total_progress);
 
@@ -813,8 +866,15 @@ void Window::DoInstall(wxCommandEvent& event) {
   if(dl_kernel) {
     mkdir("files", 0777);
 
-    i->AddLog(_("Downloading kernel (") + wxString::FromAscii(url_kernel) + _(")"));
-    get_file(url_kernel, "files/zImage");
+		if(board_32mb->GetValue()){
+		  i->AddLog(_("Downloading kernel (") + wxString::FromAscii(url_kernel_32mb) + _(")"));
+		  get_file(url_kernel_32mb, "files/zImage");
+		}
+		else if(board_8mb->GetValue()){
+		  i->AddLog(_("Downloading kernel (") + wxString::FromAscii(url_kernel_8mb) + _(")"));
+		  get_file(url_kernel_8mb, "files/zImage");
+		}
+
     total_progress += prog_part;
     i->SetProgress(total_progress);
 
@@ -826,8 +886,15 @@ void Window::DoInstall(wxCommandEvent& event) {
   if(dl_rootfs) {
     mkdir("files", 0777);
 
-    i->AddLog(_("Downloading RootFS (") + wxString::FromAscii(url_rootfs) + _(")"));
-    get_file(url_rootfs, "files/rootfs.tar.gz");
+		if(board_32mb->GetValue()){
+		  i->AddLog(_("Downloading RootFS (") + wxString::FromAscii(url_rootfs_32mb) + _(")"));
+		  get_file(url_rootfs_32mb, "files/rootfs.tar.gz");
+		}
+		else if(board_8mb->GetValue()){
+		  i->AddLog(_("Downloading RootFS (") + wxString::FromAscii(url_rootfs_8mb) + _(")"));
+		  get_file(url_rootfs_8mb, "files/rootfs.tar.gz");
+		}
+
     total_progress += prog_part;
     i->SetProgress(total_progress);
 
@@ -902,12 +969,14 @@ void Window::DoInstall(wxCommandEvent& event) {
 std::cout << "copy rootfs done! starting copy kernel" << std::endl;
 
   // copy kernel
-  i->AddLog(_("Copying kernel"));
-  total_progress += prog_part;
-  i->SetProgress(total_progress);
-  wxString mnt_point = _(mount_point);
-  wxString kernel_output_file = mnt_point + _("zImage");
-  copy_file(C_STR(kernel_file), C_STR(kernel_output_file));
+  if(write_kernel) {
+    i->AddLog(_("Copying kernel"));
+    total_progress += prog_part;
+    i->SetProgress(total_progress);
+    wxString mnt_point = _(mount_point);
+    wxString kernel_output_file = mnt_point + _("zImage");
+    copy_file(C_STR(kernel_file), C_STR(kernel_output_file));
+  }
 
 std::cout << "copy kernel done! unmount ..." << std::endl;
 

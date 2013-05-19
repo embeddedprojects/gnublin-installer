@@ -7,3 +7,6 @@
 # ignore build binaries
 gnublin-cmdline
 gnublin-installer
+
+#ignore downloadfiles path
+files/*
