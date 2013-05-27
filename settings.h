@@ -16,6 +16,7 @@
 #include <wx/button.h>
 #include <wx/frame.h>
 
+
 #ifndef VERSION
 #warning VERSION is not defined!
 #define VERSION "0.0-development"

@@ -171,7 +171,7 @@ int create_partitions(const char* dev, unsigned long bootsector_size) {
  *
  */
 int mount_partition(const char* partition, const char* mount_point) {
-  return mount(partition, mount_point, FILE_SYSTEM, 0, NULL);
+  return mount(partition, mount_point, "ext3", 0, NULL);
 }
 
 

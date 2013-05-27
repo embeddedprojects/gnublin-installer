@@ -32,12 +32,16 @@
 #include "progress.h"
 #include "backup.h"
 #include "installer.h"
+#include "md5.h"
+
 
 #define mount_point "/tmp/SDCard"
 
 IMPLEMENT_APP(installer);
 
 Window* frame;
+
+
 
 bool installer::OnInit() {
   frame = new Window(0l, _("GNUBLIN Installer"));
@@ -467,13 +471,13 @@ void Window::ReadURLs() {
           wxString k = s_child->GetNodeContent();
           printf("kernel 32mb url: %s\n", C_STR(k));
 
-          strcpy(url_kernel_32mb, C_STR(k));
+          url_kernel_32mb = k;
         }
         if(s_child->GetName() == wxT("kernel_8mb")) {
           wxString k = s_child->GetNodeContent();
           printf("kernel 8mb url: %s\n", C_STR(k));
 
-          strcpy(url_kernel_8mb, C_STR(k));
+          url_kernel_8mb = k;
         }
 
         // get bootloader url
@@ -481,13 +485,13 @@ void Window::ReadURLs() {
           wxString b = s_child->GetNodeContent();
           printf("bootloader 32mb url: %s\n", C_STR(b));
 
-          strcpy(url_bootloader_32mb, C_STR(b));
+          url_bootloader_32mb = b;
         }
         if(s_child->GetName() == wxT("bootloader_8mb")) {
-          wxString k = s_child->GetNodeContent();
-          printf("bootloader 8mb url: %s\n", C_STR(k));
+          wxString b = s_child->GetNodeContent();
+          printf("bootloader 8mb url: %s\n", C_STR(b));
 
-          strcpy(url_bootloader_8mb, C_STR(k));
+          url_bootloader_8mb = b;
         }
 
         // get rootfs url
@@ -495,13 +499,13 @@ void Window::ReadURLs() {
           wxString r = s_child->GetNodeContent();
           printf("rootfs 32mb url: %s\n", C_STR(r));
 
-          strcpy(url_rootfs_32mb, C_STR(r));
+	  url_rootfs_32mb = r;
         }
         if(s_child->GetName() == wxT("rootfs_8mb")) {
           wxString r = s_child->GetNodeContent();
           printf("rootfs 8mb url: %s\n", C_STR(r));
 
-          strcpy(url_rootfs_8mb, C_STR(r));
+          url_rootfs_8mb = r;
         }
 
         // display
@@ -838,24 +842,28 @@ void Window::DoInstall(wxCommandEvent& event) {
 
   int prog_part = 100 / parts;
   int total_progress = 0;
+  int ErrorFlag=0;
 
   i->SetProgress(total_progress);
-
-  //i->AddLog(_("----------------------------"));
-  //i->AddLog(_(""));
   i->AddLog(_("Starting installation... This might take a few minutes"));
 
   // download bootloader
-  if(dl_bootl) {
-    mkdir("files", 0777);
-		if(board_32mb->GetValue()){
-		  i->AddLog(_("Downloading bootloader (") + wxString::FromAscii(url_bootloader_32mb) + _(")"));
-		  get_file(url_bootloader_32mb, "files/apex.bin");
+  if(dl_bootl & !ErrorFlag) {
+	mkdir("files", 0777);
+	i->AddLog(_("Downloading and checking bootloader"));
+	if(board_32mb->GetValue()){
+		if((ErrorFlag = ChecknLoad(_("apex.bin"), url_bootloader_32mb, i))){
+			i->AddLog(_("Error while load and md5 check bootloader file."));
+			return;
 		}
-		else if(board_8mb->GetValue()){
-		  i->AddLog(_("Downloading bootloader (") + wxString::FromAscii(url_bootloader_8mb) + _(")"));
-		  get_file(url_bootloader_8mb, "files/apex.bin");
+	}
+	
+	else if(board_8mb->GetValue()){
+	  if((ErrorFlag = ChecknLoad(_("apex.bin"), url_bootloader_8mb, i))){
+	  		i->AddLog(_("Error while load and md5 check bootloader file."));
+			return;
 		}
+	}
     total_progress += prog_part;
     i->SetProgress(total_progress);
 
@@ -863,17 +871,21 @@ void Window::DoInstall(wxCommandEvent& event) {
   }
 
   // download kernel
-  if(dl_kernel) {
-    mkdir("files", 0777);
-
-		if(board_32mb->GetValue()){
-		  i->AddLog(_("Downloading kernel (") + wxString::FromAscii(url_kernel_32mb) + _(")"));
-		  get_file(url_kernel_32mb, "files/zImage");
+  if(dl_kernel & !ErrorFlag) {
+    	mkdir("files", 0777);
+    	i->AddLog(_("Downloading and checking kernel"));
+	if(board_32mb->GetValue()){
+		if((ErrorFlag = ChecknLoad(_("zImage"), url_kernel_32mb, i))){
+			i->AddLog(_("Error while load and md5 check kernel file."));
+			return;
 		}
-		else if(board_8mb->GetValue()){
-		  i->AddLog(_("Downloading kernel (") + wxString::FromAscii(url_kernel_8mb) + _(")"));
-		  get_file(url_kernel_8mb, "files/zImage");
+	}
+	else if(board_8mb->GetValue()){
+		if((ErrorFlag = ChecknLoad(_("zImage"), url_kernel_8mb, i))){
+			i->AddLog(_("Error while load and md5 check kernel file."));
+			return;
 		}
+	}
 
     total_progress += prog_part;
     i->SetProgress(total_progress);
@@ -883,125 +895,220 @@ void Window::DoInstall(wxCommandEvent& event) {
   }
 
   // download rootfs
-  if(dl_rootfs) {
-    mkdir("files", 0777);
-
-		if(board_32mb->GetValue()){
-		  i->AddLog(_("Downloading RootFS (") + wxString::FromAscii(url_rootfs_32mb) + _(")"));
-		  get_file(url_rootfs_32mb, "files/rootfs.tar.gz");
+  if(dl_rootfs & !ErrorFlag) {
+    	mkdir("files", 0777);
+    	i->AddLog(_("Downloading and checking rootfs"));
+	if(board_32mb->GetValue()){
+		if((ErrorFlag = ChecknLoad(_("rootfs.tar.gz"), url_rootfs_32mb, i))){
+			i->AddLog(_("Error while load and md5 check rootfs file."));
+			return;
 		}
-		else if(board_8mb->GetValue()){
-		  i->AddLog(_("Downloading RootFS (") + wxString::FromAscii(url_rootfs_8mb) + _(")"));
-		  get_file(url_rootfs_8mb, "files/rootfs.tar.gz");
+	}
+	else if(board_8mb->GetValue()){
+		if((ErrorFlag = ChecknLoad(_("rootfs.tar.gz"), url_rootfs_8mb, i))){
+			i->AddLog(_("Error while load and md5 check rootfs file."));
+			return;
 		}
+	}
 
     total_progress += prog_part;
     i->SetProgress(total_progress);
 
     rootfs_file = _("files/rootfs.tar.gz");
   }
+  if(!ErrorFlag){
+	  // check if mounted
+	  total_progress += prog_part;
+	  i->SetProgress(total_progress);
 
-  // check if mounted
-  total_progress += prog_part;
-  i->SetProgress(total_progress);
+	  int c;
+	  for(c = 0; c < 2; c++) {
+	  wxString part;
+	    if(device.Contains(_("mmc"))){
+	    	part = device + _("p") + wxString::FromAscii(c + 1 + '0');
+	    }
+	    else {
+	    	part = device + wxString::FromAscii(c + 1 + '0');
+	    }
 
-  int c;
-  for(c = 0; c < 2; c++) {
-    wxString part = device + wxString::FromAscii(c + 1 + '0');
-    if(is_mounted(C_STR(part))) {
-      i->AddLog(_("Unmounting ") + part);
+	    if(is_mounted(C_STR(part))) {
+	      i->AddLog(_("Unmounting ") + part);
+	      std::cout << "Unmounting: " << C_STR(part) << std::endl;
+	      unmount_partition(get_mountpoint(C_STR(part)));
 
-      unmount_partition(get_mountpoint(C_STR(part)));
+	      if(is_mounted(C_STR(part))) {
+		i->AddLog(_("ERROR: can not unmount ") + part);
 
-      if(is_mounted(C_STR(part))) {
-        i->AddLog(_("ERROR: can not unmount ") + part);
+		return;
+	      }
+	    }
+	  }
+	  // create partitions
+	  if(repartition) {
+	    i->AddLog(_("Creating partitions"));
+	    total_progress += prog_part;
+	    i->SetProgress(total_progress);
 
-        return;
-      }
-    }
+	    create_partitions(C_STR(device), bootsector_size);
+	  }
+
+	  // copy bootloader
+	  if(write_bootl) {
+	    i->AddLog(_("Writing bootloader"));
+	    total_progress += prog_part;
+	    i->SetProgress(total_progress);
+
+	    wxString boot_part = device + _("2");
+	    dd(C_STR(bootloader_file), C_STR(boot_part), 512);
+	  }
+
+	if(write_rootfs | write_kernel){
+	  // mount
+	  i->AddLog(_("Mounting Linux partition"));
+	  total_progress += prog_part;
+	  i->SetProgress(total_progress);
+
+	  mkdir(mount_point, 0777);
+	  wxString linux_part;
+	  if(device.Contains(_("mmc"))){
+	  	linux_part = device + _("p1");
+	  }
+	  else 
+	  	linux_part = device + _("1");
+	  mount_partition(C_STR(linux_part), mount_point);
+
+	  if(!is_mounted(C_STR(linux_part))) {
+	    i->AddLog(_("ERROR: can not mount filesystem"));
+	    return;
+	  }
+	  // extract rootfs
+	  if(write_rootfs) {
+	    i->AddLog(_("Extracting RootFS"));
+	    total_progress += prog_part;
+	    i->SetProgress(total_progress);
+
+	    extract_archive(C_STR(rootfs_file), mount_point);
+	  }
+
+	std::cout << "copy rootfs done! starting copy kernel" << std::endl;
+
+	  // copy kernel
+	  if(write_kernel) {
+	    i->AddLog(_("Copying kernel"));
+	    total_progress += prog_part;
+	    i->SetProgress(total_progress);
+	    wxString mnt_point = _(mount_point);
+	    wxString kernel_output_file = mnt_point + _("zImage");
+	    copy_file(C_STR(kernel_file), C_STR(kernel_output_file));
+	  }
+
+	std::cout << "copy kernel done! unmount ..." << std::endl;
+
+	  for(c = 0; c < 2; c++) {
+	  wxString part;
+	    if(device.Contains(_("mmc"))){
+	    	part = device + _("p") + wxString::FromAscii(c + 1 + '0');
+	    }
+	    else {
+	    	part = device + wxString::FromAscii(c + 1 + '0');
+	    }
+	    if(is_mounted(C_STR(part))) {
+	      i->AddLog(_("Unmounting ") + part);
+	      std::cout << "Unmounting: " << C_STR(part) << std::endl;
+
+	      unmount_partition(get_mountpoint(C_STR(part)));
+
+	      if(is_mounted(C_STR(part))) {
+		i->AddLog(_("ERROR: can not unmount ") + part);
+		std::cout << "ERROR: can not unmount " << C_STR(part);
+
+		return;
+	      }
+	    }
+	  }
+
+	std::cout << "unmount done! sync ..." << std::endl;
+	}
+	  // sync
+	  i->AddLog(_("Syncing"));
+	  total_progress += prog_part;
+	  i->SetProgress(total_progress);
+
+	  sync_card();
+
+	std::cout << "sync done!" << std::endl;
+
+	  i->AddLog(_("Done!"));
   }
-  // create partitions
-  if(repartition) {
-    i->AddLog(_("Creating partitions"));
-    total_progress += prog_part;
-    i->SetProgress(total_progress);
-
-    create_partitions(C_STR(device), bootsector_size);
-  }
-
-  // copy bootloader
-  if(write_bootl) {
-    i->AddLog(_("Writing bootloader"));
-    total_progress += prog_part;
-    i->SetProgress(total_progress);
-
-    wxString boot_part = device + _("2");
-    dd(C_STR(bootloader_file), C_STR(boot_part), 512);
-  }
-
-  // mount
-  i->AddLog(_("Mounting Linux partition"));
-  total_progress += prog_part;
-  i->SetProgress(total_progress);
-
-  mkdir(mount_point, 0777);
-  wxString linux_part;
-  if(device.Contains(_("mmc"))){
-  	linux_part = device + _("p1");
-  }
-  else 
-  	linux_part = device + _("1");
-  mount_partition(C_STR(linux_part), mount_point);
-
-  if(!is_mounted(C_STR(linux_part))) {
-    i->AddLog(_("ERROR: can not mount filesystem"));
-    return;
-  }
-  // extract rootfs
-  if(write_rootfs) {
-    i->AddLog(_("Extracting RootFS"));
-    total_progress += prog_part;
-    i->SetProgress(total_progress);
-
-    extract_archive(C_STR(rootfs_file), mount_point);
-  }
-
-std::cout << "copy rootfs done! starting copy kernel" << std::endl;
-
-  // copy kernel
-  if(write_kernel) {
-    i->AddLog(_("Copying kernel"));
-    total_progress += prog_part;
-    i->SetProgress(total_progress);
-    wxString mnt_point = _(mount_point);
-    wxString kernel_output_file = mnt_point + _("zImage");
-    copy_file(C_STR(kernel_file), C_STR(kernel_output_file));
-  }
-
-std::cout << "copy kernel done! unmount ..." << std::endl;
-
-  // unmount
-  i->AddLog(_("Unmounting Linux partition"));
-  total_progress += prog_part;
-  i->SetProgress(total_progress);
-
-  unmount_partition(C_STR(linux_part));
-
-std::cout << "unmount done! sync ..." << std::endl;
-
-  // sync
-  i->AddLog(_("Syncing"));
-  total_progress += prog_part;
-  i->SetProgress(total_progress);
-
-  sync_card();
-
-std::cout << "sync done!" << std::endl;
-
-  i->AddLog(_("Done!"));
   i->AddLog(_("You may close this window now."));
 
   i->SetProgress(100);
+}
+
+int Window::ChecknLoad(wxString file, wxString url, InstallerFrame* i){
+	wxString md5file;
+	wxString md5calc;
+	i->AddLog(_("Downloading ")+file+_(".md5"));
+	get_file((C_STR(url + _(".md5"))), C_STR(_("files/")+file+_(".md5")));
+
+	FILE* file_bl = fopen(C_STR(_("files/")+file), "rb");
+	if(file_bl == NULL) {
+		i->AddLog(_("Downloading ")+file);
+		get_file(C_STR(url), C_STR(_("files/")+file));
+	}
+	else 
+		fclose(file_bl);
+
+	wxFileInputStream file_md5(_("files/")+file + _(".md5"));
+	if(!file_md5){
+		//could not open file!
+	}
+
+	wxTextInputStream tfile_md5 (file_md5);
+	md5file = tfile_md5.ReadLine();
+	if (md5file.Contains(_("DOCTYPE HTML PUBLIC"))){
+		i->AddLog(_("md5 file not found on the server"));
+		std::cout << "md5 file not found on the server" << std::endl;
+		wxMessageBox(_("Error while getting the ") + file + _(".md5 file! Please check the links in the settings.xml file!"), _("Error"), wxOK | wxICON_ERROR);
+		return -1;
+	}
+	else if (md5file.Len()==0){
+		i->AddLog(_("could not load md5 file"));
+		std::cout << "could not load md5 file" << std::endl;
+		wxMessageBox(_("Error while getting the ") + file + _(".md5 file! Perhaps there is no internet connection?"), _("Error"), wxOK | wxICON_ERROR);
+		return -1;
+	}
+	else{
+	
+		std::cout << "md5file: " << C_STR(md5file) << std::endl;
+		md5calc = wxString::FromAscii(calc_md5(C_STR(_("files/")+file)));
+		std::cout << "md5calc: " << C_STR(md5calc) << std::endl;
+		if(md5file.Contains(md5calc)){
+			i->AddLog(_("md5 check: ok"));
+			std::cout << "md5 check: ok" << std::endl;
+		}
+		else{
+			i->AddLog(_("md5 check: failed (old or corrupt file) -> redownload..."));
+			std::cout << "md5 check: failed (old or corrupt file) -> redownload..." << std::endl;
+			get_file(C_STR(url), C_STR(_("files/")+file));
+			md5calc = wxString::FromAscii(calc_md5(C_STR(_("files/")+file)));
+			std::cout << "md5calc: " << C_STR(md5calc) << std::endl;
+			if(md5file.Contains(md5calc)){
+				i->AddLog(_("md5 check: ok"));
+				std::cout << "md5 check: ok" << std::endl;
+			}
+			else {
+				i->AddLog(_("md5 check: failed again"));
+				std::cout << "md5 check: failed again" << std::endl;
+				if(wxMessageBox(_("Error while getting/md5-checking the ") + file + _(" file! Perhaps there is no internet connection? For further information check the command line. Continue anyway?(Absolutely not recomended!)"), _("Error"), wxYES_NO | wxICON_EXCLAMATION | wxNO_DEFAULT) == wxNO) {
+					return -1;
+				}
+				else
+					return 0;
+			}
+	}
+	}
+	return 0;
 }
 
 void Window::SetHideDev(bool h) {

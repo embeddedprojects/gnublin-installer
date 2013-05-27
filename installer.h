@@ -1,3 +1,6 @@
+#ifndef _INSTALLER_H_
+#define _INSTALLER_H_
+
 #include <wx/wx.h>
 #include <wx/statline.h>
 #include <wx/gdicmn.h>
@@ -15,7 +18,10 @@
 #include <wx/aboutdlg.h>
 #include <wx/xml/xml.h>
 #include <wx/spinctrl.h>
+#include <wx/wfstream.h>
+#include <wx/txtstrm.h>
 #include "backup.h"
+#include "progress.h"
 
 #define C_STR(str) const_cast<char*>((const char*)(str).mb_str())
 
@@ -28,7 +34,7 @@ class Window: public wxFrame {
     void ReadSettings();
     void WriteSettings();
     void ReadDevices();
-
+    int ChecknLoad(wxString file, wxString url, InstallerFrame* i);
     void SetHideDev(bool h);
     void SetHideDevSize(unsigned long s);
     void SetCheckRoot(bool c);
@@ -53,12 +59,12 @@ class Window: public wxFrame {
     unsigned long hidesize;
     bool hidedevice;
     bool checkroot;
-    char url_kernel_32mb[512];
-    char url_bootloader_32mb[512];
-    char url_rootfs_32mb[512];
-    char url_kernel_8mb[512];
-    char url_bootloader_8mb[512];
-    char url_rootfs_8mb[512];
+    wxString url_kernel_32mb;
+    wxString url_bootloader_32mb;
+    wxString url_rootfs_32mb;
+    wxString url_kernel_8mb;
+    wxString url_bootloader_8mb;
+    wxString url_rootfs_8mb;
     wxString display_url;
     volatile int stop_backup;
 
@@ -100,6 +106,7 @@ class installer : public wxApp {
     virtual bool OnInit();
 };
 
+#endif
 
 
 

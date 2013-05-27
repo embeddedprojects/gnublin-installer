@@ -8,11 +8,11 @@
   </settings>
   <url>
     <display>GNUBLIN page</display>
-    <kernel_32mb>http://www.gnublin.org/downloads/kernel-2.6.33/zImage</kernel_32mb>
-    <bootloader_32mb>http://www.gnublin.org/downloads/apex/apex.bin</bootloader_32mb>
-    <rootfs_32mb>http://www.gnublin.org/downloads/rootfs.tar.gz</rootfs_32mb>
-    <kernel_8mb>http://www.gnublin.org/downloads/kernel-2.6.33/zImage</kernel_8mb>
-    <bootloader_8mb>http://www.gnublin.org/downloads/apex/apex.bin</bootloader_8mb>
-    <rootfs_8mb>http://www.gnublin.org/downloads/rootfs.tar.gz</rootfs_8mb>
+    <kernel_32mb>http://www.gnublin.org/downloads/gnublin_distribution/32MB/zImage</kernel_32mb>
+    <bootloader_32mb>http://www.gnublin.org/downloads/gnublin_distribution/32MB/apex.bin</bootloader_32mb>
+    <rootfs_32mb>http://www.gnublin.org/downloads/gnublin_distribution/32MB/gnublin_debian_rootfs.tar.gz</rootfs_32mb>
+    <kernel_8mb>http://www.gnublin.org/downloads/gnublin_distribution/8MB/zImage</kernel_8mb>
+    <bootloader_8mb>http://www.gnublin.org/downloads/gnublin_distribution/8MB/apex.bin</bootloader_8mb>
+    <rootfs_8mb>http://www.gnublin.org/downloads/gnublin_distribution/8MB/gnublin_debian_rootfs.tar.gz</rootfs_8mb>
   </url>
 </installer>
