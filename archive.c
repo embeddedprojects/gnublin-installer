@@ -28,7 +28,7 @@ int extract_archive(const char* filename, const char* to_path) {
 
       char command[1000];
     
-    sprintf(command, "tar -xzvf %s -C %s",filename,to_path);
+    sprintf(command, "tar -xzf %s -C %s",filename,to_path);
     system(command);
   
   

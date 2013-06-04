@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
 #include <parted/parted.h>
 #include <sys/mount.h>
 #include <unistd.h>
@@ -128,6 +129,7 @@ int create_partitions(const char* dev, unsigned long bootsector_size) {
   printf("partition table done! get file system type...\n");
   // get file system type (ext2)
   fs_type = ped_file_system_type_get(FILE_SYSTEM);
+  
 
   printf("get file system type done! create partitions...\n");
   // create partitions
@@ -154,6 +156,7 @@ int create_partitions(const char* dev, unsigned long bootsector_size) {
   ped_disk_commit_to_dev(disk);
   ped_disk_commit_to_os(disk);
 
+  //tune2fs
   printf("commit to hardware done! tune2fs (ext3&lable Gnublin) ...\n");
   if(strcmp(dev, "/dev/mmcblk0")==0){
   	sprintf(command2, "tune2fs -j -L Gnublin %sp1",dev);
@@ -163,7 +166,37 @@ int create_partitions(const char* dev, unsigned long bootsector_size) {
   system(command2);
 
   printf("tune2fs done! create partitions finished!\n");
+  
+  //change boot partition id
+  printf("commit to hardware done! switch boot partition id to \"DF\" ...\n");
+  
+  change_to_bootit(dev);
+//  sprintf(command2, "sfdisk -c %s 2 df",dev);
+//  system(command2);
+
+  printf("switch partition id done! create partitions finished!\n");
+  
   return 1;
+}
+
+/**
+ *Changes the Partition id of the bootloader partition to "df"(BootIt)
+ *
+ *
+ */
+int change_to_bootit (const char* dev){
+	printf("File to change to bootit id: %s\n",dev);
+	char puffer[1];
+	puffer[0]=0xdf;  //df = boot it id
+	int fd;
+	if(-1==(fd = open(dev, O_RDWR | O_NONBLOCK))){
+		printf("Error open file: %s\n",dev);
+		return -1;
+	}
+	lseek(fd, 466L,0);
+	write(fd,puffer,1);
+	close(fd);
+	return 0;
 }
 
 /**

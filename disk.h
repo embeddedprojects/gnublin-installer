@@ -14,7 +14,7 @@ typedef struct _Drive {
   unsigned long sector_size;
 } Drive;
 
-
+int change_to_bootit(const char* dev);
 int is_mounted(const char* partition);
 int is_root();
 Partition** get_partitions(const char* dev);

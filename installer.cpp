@@ -2,6 +2,7 @@
  *
  *  Author:    Michael Schwarz
  *  Copyright (C) 2011 Michael Schwarz
+ *  Edited by: Manuel Liebert
  *
  * GNUBLIN Installer
  *
@@ -875,13 +876,13 @@ void Window::DoInstall(wxCommandEvent& event) {
     	mkdir("files", 0777);
     	i->AddLog(_("Downloading and checking kernel"));
 	if(board_32mb->GetValue()){
-		if((ErrorFlag = ChecknLoad(_("zImage"), url_kernel_32mb, i))){
+		if((ErrorFlag = ChecknLoad(_("kernel.tar.gz"), url_kernel_32mb, i))){
 			i->AddLog(_("Error while load and md5 check kernel file."));
 			return;
 		}
 	}
 	else if(board_8mb->GetValue()){
-		if((ErrorFlag = ChecknLoad(_("zImage"), url_kernel_8mb, i))){
+		if((ErrorFlag = ChecknLoad(_("kernel.tar.gz"), url_kernel_8mb, i))){
 			i->AddLog(_("Error while load and md5 check kernel file."));
 			return;
 		}
@@ -891,7 +892,7 @@ void Window::DoInstall(wxCommandEvent& event) {
     i->SetProgress(total_progress);
 
 
-    kernel_file = _("files/zImage");
+    kernel_file = _("files/kernel.tar.gz");
   }
 
   // download rootfs
@@ -997,9 +998,7 @@ void Window::DoInstall(wxCommandEvent& event) {
 	    i->AddLog(_("Copying kernel"));
 	    total_progress += prog_part;
 	    i->SetProgress(total_progress);
-	    wxString mnt_point = _(mount_point);
-	    wxString kernel_output_file = mnt_point + _("zImage");
-	    copy_file(C_STR(kernel_file), C_STR(kernel_output_file));
+	    extract_archive(C_STR(kernel_file), mount_point);
 	  }
 
 	std::cout << "copy kernel done! unmount ..." << std::endl;
@@ -1012,6 +1011,7 @@ void Window::DoInstall(wxCommandEvent& event) {
 	    else {
 	    	part = device + wxString::FromAscii(c + 1 + '0');
 	    }
+	    sleep(4);
 	    if(is_mounted(C_STR(part))) {
 	      i->AddLog(_("Unmounting ") + part);
 	      std::cout << "Unmounting: " << C_STR(part) << std::endl;
@@ -1019,10 +1019,14 @@ void Window::DoInstall(wxCommandEvent& event) {
 	      unmount_partition(get_mountpoint(C_STR(part)));
 
 	      if(is_mounted(C_STR(part))) {
-		i->AddLog(_("ERROR: can not unmount ") + part);
-		std::cout << "ERROR: can not unmount " << C_STR(part);
-
-		return;
+	      sleep(4);
+	      std::cout << "Unmounting: " << mount_point << std::endl;
+	        unmount_partition(mount_point);
+	        if(is_mounted(C_STR(part))){
+			i->AddLog(_("ERROR: can not unmount ") + part);
+			std::cout << "ERROR: can not unmount " << C_STR(part);
+			return;
+		}
 	      }
 	    }
 	  }

@@ -27,8 +27,9 @@ gnublin-installer: $(OBJ) $(OBJ_CMD)
 	$(CPP) $(CXXFLAGS) -c $<
 
 clean: 
-	rm *.o
-
+	rm -f *.o
+	rm -f gnublin-installer
+	rm -f gnublin-cmdline
 astyle:
 	astyle --style=java --indent=spaces=2 --indent-classes --indent-switches --indent-labels --indent-col1-comments --pad-oper --unpad-paren --add-brackets --convert-tabs --align-pointer=type *.c *.cpp *.h
 
