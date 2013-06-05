@@ -1,5 +1,5 @@
-VERSION = 1.4.0.1-beta
-ARCHITECTURE = x64
+VERSION = 1.4.0.1
+ARCHITECTURE = amd64
 CPP = g++
 -I/usr/lib/wx/include/gtk2-unicode-release-2.8 -I/usr/include/wx-2.8 -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES -D__WXGTK__
 CXXFLAGS = -Wall -g `wx-config --cxxflags` -pthread -DVERSION='"$(VERSION)"'
@@ -68,9 +68,9 @@ release: gnublin-installer
 	@echo "Version: $(VERSION)" >> deb/DEBIAN/control
 	@echo "Section: devel" >> deb/DEBIAN/control
 	@echo "Priority: optional" >> deb/DEBIAN/control
-	@echo "Architecture: i386" >> deb/DEBIAN/control
+	@echo "Architecture: $(ARCHITECTURE)" >> deb/DEBIAN/control
 	@echo "Essential: no" >> deb/DEBIAN/control
-	@echo "Depends: " >> deb/DEBIAN/control
+	@echo "Depends: libparted0debian1, libcurl3, libwxgtk2.8-0, libarchive13" >> deb/DEBIAN/control
 	@echo "Installed-Size: $(DEBSIZE)" >> deb/DEBIAN/control
 	@echo "Maintainer: Manuel Liebert <man.liebert@gmail.com>" >> deb/DEBIAN/control
 	@echo "Description: Graphical installer for GNUBLIN embedded Linux board" >> deb/DEBIAN/control
