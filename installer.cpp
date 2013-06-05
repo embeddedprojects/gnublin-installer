@@ -1001,8 +1001,19 @@ void Window::DoInstall(wxCommandEvent& event) {
 	    extract_archive(C_STR(kernel_file), mount_point);
 	  }
 
-	std::cout << "copy kernel done! unmount ..." << std::endl;
+	std::cout << "copy kernel done! syncing ..." << std::endl;
 
+
+	  // sync
+	  i->AddLog(_("Syncing..."));
+	  total_progress += prog_part;
+	  i->SetProgress(total_progress);
+
+	  sync_card();
+
+	 std::cout << "sync done! unmount partition..." << std::endl;
+	
+	
 	  for(c = 0; c < 2; c++) {
 	  wxString part;
 	    if(device.Contains(_("mmc"))){
@@ -1031,16 +1042,9 @@ void Window::DoInstall(wxCommandEvent& event) {
 	    }
 	  }
 
-	std::cout << "unmount done! sync ..." << std::endl;
+	std::cout << "unmount done!" << std::endl;
 	}
-	  // sync
-	  i->AddLog(_("Syncing"));
-	  total_progress += prog_part;
-	  i->SetProgress(total_progress);
 
-	  sync_card();
-
-	std::cout << "sync done!" << std::endl;
 
 	  i->AddLog(_("Done!"));
   }
@@ -1137,7 +1141,7 @@ void Window::ShowAbout(wxCommandEvent& event) {
   info.SetName(_("GNUBLIN Installer"));
   info.SetVersion(_(VERSION));
   info.SetDescription(_("Installer for GNUBLIN Linux Board"));
-  info.SetCopyright(wxT("(C) 2011 Michael Schwarz <michael.schwarz91@gmail.com>"));
+  info.SetCopyright(wxT("(C) 2011 Michael Schwarz <michael.schwarz91@gmail.com>\nEdited by Manuel Liebert <man.liebert@gmail.com>"));
 
   wxAboutBox(info);
 }

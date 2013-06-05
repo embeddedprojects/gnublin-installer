@@ -10,3 +10,8 @@ gnublin-installer
 
 #ignore downloadfiles path
 files/*
+
+
+deb/
+gnublin-installer*
+

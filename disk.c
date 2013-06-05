@@ -156,8 +156,16 @@ int create_partitions(const char* dev, unsigned long bootsector_size) {
   ped_disk_commit_to_dev(disk);
   ped_disk_commit_to_os(disk);
 
+  //change boot partition id
+  printf("create filesystem done! switch boot partition id to \"DF\" ...\n");
+  
+  change_to_bootit(dev);
+//  sprintf(command2, "sfdisk -c %s 2 df",dev);
+//  system(command2);
+
+  
   //tune2fs
-  printf("commit to hardware done! tune2fs (ext3&lable Gnublin) ...\n");
+  printf("switch partition id done! tune2fs (ext3&lable Gnublin) ...\n");
   if(strcmp(dev, "/dev/mmcblk0")==0){
   	sprintf(command2, "tune2fs -j -L Gnublin %sp1",dev);
   }
@@ -167,14 +175,7 @@ int create_partitions(const char* dev, unsigned long bootsector_size) {
 
   printf("tune2fs done! create partitions finished!\n");
   
-  //change boot partition id
-  printf("commit to hardware done! switch boot partition id to \"DF\" ...\n");
-  
-  change_to_bootit(dev);
-//  sprintf(command2, "sfdisk -c %s 2 df",dev);
-//  system(command2);
 
-  printf("switch partition id done! create partitions finished!\n");
   
   return 1;
 }
