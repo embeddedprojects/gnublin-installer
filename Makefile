@@ -6,18 +6,18 @@ CXXFLAGS = -Wall -g `wx-config --cxxflags` -pthread -DVERSION='"$(VERSION)"'
 CXXFLAGS_CMD = -Wall -g -DVERSION='"$(VERSION)"'s
 # -lwx_gtk2u_richtext-2.8 -lwx_gtk2u_aui-2.8 -lwx_gtk2u_xrc-2.8 -lwx_gtk2u_qa-2.8 -lwx_gtk2u_html-2.8 -lwx_gtk2u_adv-2.8 -lwx_gtk2u_core-2.8 -lwx_baseu_xml-2.8 -lwx_baseu_net-2.8 -lwx_baseu-2.8
 LDFLAGS = -lparted -lcurl -pthread -Wl,-Bsymbolic-functions  -L/usr/lib/i386-linux-gnu  `wx-config --libs`  -larchive -lssl -lcrypto
-LDFLAGS_CMD = -lparted -larchive -L/usr/lib/i386-linux-gnu -Wl,-Bsymbolic-functions
+LDFLAGS_CMD = -lparted -L/usr/lib/i386-linux-gnu -Wl,-Bsymbolic-functions
 
 
 OBJ = net.o disk.o installer.o archive.o settings.o progress.o backup.o md5.o
-OBJ_CMD = disk.o archive.o cmdparser.o cmdline.o 
+#OBJ_CMD = disk.o archive.o cmdparser.o cmdline.o 
 
 RELEASE_NAME = gnublin-installer-$(VERSION)
-RELEASE_FILES = gnublin-installer gnublin-cmdline settings.xml
+RELEASE_FILES = gnublin-installer settings.xml
 
 gnublin-installer: $(OBJ) $(OBJ_CMD)
 	$(CPP) $(CXXFLAGS) -o gnublin-installer $(OBJ) $(LDFLAGS)
-	$(CPP) $(CXXFLAGS_CMD) -o gnublin-cmdline $(OBJ_CMD) $(LDFLAGS_CMD) 
+	#$(CPP) $(CXXFLAGS_CMD) -o gnublin-cmdline $(OBJ_CMD) $(LDFLAGS_CMD) 
 
 
 %.o: %.cpp
@@ -35,7 +35,7 @@ astyle:
 
 release: gnublin-installer
 	@strip gnublin-installer
-	@strip gnublin-cmdline
+	@#strip gnublin-cmdline
 	@tar -czf $(RELEASE_NAME)-bin-$(ARCHITECTURE).tar.gz $(RELEASE_FILES)
 	@tar -czf $(RELEASE_NAME)-src.tar.gz *.c *.h *.cpp Makefile gui.fbp settings.xml
 	# generate deb
@@ -47,7 +47,7 @@ release: gnublin-installer
 	@mkdir -p /tmp/gnublin-installer
 
 	@cp ./gnublin-installer deb/usr/share/gnublin-installer
-	@cp ./gnublin-cmdline deb/usr/share/gnublin-installer
+	@#cp ./gnublin-cmdline deb/usr/share/gnublin-installer
 	@cp ./settings.xml deb/usr/share/gnublin-installer
 
 	# generate starter file
@@ -55,10 +55,10 @@ release: gnublin-installer
 	@echo "cd /usr/share/gnublin-installer" >> deb/usr/bin/gnublin-installer
 	@echo "./gnublin-installer" >> deb/usr/bin/gnublin-installer
 
-	# generate starter file for gnublin-cmdline
-	@echo "#!/bin/bash" > deb/usr/bin/gnublin-cmdline
-	@echo "cd /usr/share/gnublin-installer" >> deb/usr/bin/gnublin-cmdline
-	@echo "./gnublin-cmdline" >> deb/usr/bin/gnublin-cmdline
+	@# generate starter file for gnublin-cmdline
+	@#echo "#!/bin/bash" > deb/usr/bin/gnublin-cmdline
+	@#echo "cd /usr/share/gnublin-installer" >> deb/usr/bin/gnublin-cmdline
+	@#echo "./gnublin-cmdline" >> deb/usr/bin/gnublin-cmdline
 
 	# determine installed size of package
 	@DEBSIZE=`du -c -k -s deb/usr/* | tail -n 1 | gawk '/[0-9]/ { print $1 }'`
@@ -70,7 +70,7 @@ release: gnublin-installer
 	@echo "Priority: optional" >> deb/DEBIAN/control
 	@echo "Architecture: $(ARCHITECTURE)" >> deb/DEBIAN/control
 	@echo "Essential: no" >> deb/DEBIAN/control
-	@echo "Depends: libparted0debian1, libcurl3, libwxgtk2.8-0, libarchive13" >> deb/DEBIAN/control
+	@echo "Depends: libparted0debian1, libcurl3, libwxgtk2.8-0" >> deb/DEBIAN/control
 	@echo "Installed-Size: $(DEBSIZE)" >> deb/DEBIAN/control
 	@echo "Maintainer: Manuel Liebert <man.liebert@gmail.com>" >> deb/DEBIAN/control
 	@echo "Description: Graphical installer for GNUBLIN embedded Linux board" >> deb/DEBIAN/control

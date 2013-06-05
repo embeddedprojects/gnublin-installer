@@ -93,7 +93,7 @@ int extract_archive(const char* filename, const char* to_path) {
   return 1;
 }
 
-
+/*
 int copy_data(struct archive* ar, struct archive* aw) {
   int r;
   const void* buff;
@@ -119,3 +119,4 @@ int copy_data(struct archive* ar, struct archive* aw) {
     }
   }
 }
+*/
