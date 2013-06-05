@@ -1,5 +1,5 @@
 VERSION = 1.4.0.1-beta
-ARCHITECTURE = i386
+ARCHITECTURE = x64
 CPP = g++
 -I/usr/lib/wx/include/gtk2-unicode-release-2.8 -I/usr/include/wx-2.8 -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES -D__WXGTK__
 CXXFLAGS = -Wall -g `wx-config --cxxflags` -pthread -DVERSION='"$(VERSION)"'
@@ -36,7 +36,8 @@ astyle:
 release: gnublin-installer
 	@strip gnublin-installer
 	@strip gnublin-cmdline
-
+	@tar -czf $(RELEASE_NAME)-bin-$(ARCHITECTURE).tar.gz $(RELEASE_FILES)
+	@tar -czf $(RELEASE_NAME)-src.tar.gz *.c *.h *.cpp Makefile gui.fbp settings.xml
 	# generate deb
 
 	# copy to deb/usr/share/gnublin-installer
@@ -62,15 +63,12 @@ release: gnublin-installer
 	# determine installed size of package
 	@DEBSIZE=`du -c -k -s deb/usr/* | tail -n 1 | gawk '/[0-9]/ { print $1 }'`
 
-	@architecture=`arch`
-	@echo $(architecture)
-
 	# create control file
 	@echo "Package: gnublin-installer" > deb/DEBIAN/control
 	@echo "Version: $(VERSION)" >> deb/DEBIAN/control
 	@echo "Section: devel" >> deb/DEBIAN/control
 	@echo "Priority: optional" >> deb/DEBIAN/control
-	@echo "Architecture: $(ARCHITECTURE)" >> deb/DEBIAN/control
+	@echo "Architecture: i386" >> deb/DEBIAN/control
 	@echo "Essential: no" >> deb/DEBIAN/control
 	@echo "Depends: " >> deb/DEBIAN/control
 	@echo "Installed-Size: $(DEBSIZE)" >> deb/DEBIAN/control
@@ -84,7 +82,7 @@ release: gnublin-installer
 	@chmod +x /tmp/gnublin-installer/usr/bin/gnublin-cmdline
 
 	# build package
-	@dpkg -b /tmp/gnublin-installer $(RELEASE_NAME)-i386.deb
+	@dpkg -b /tmp/gnublin-installer $(RELEASE_NAME)-$(ARCHITECTURE).deb
 
 
  
