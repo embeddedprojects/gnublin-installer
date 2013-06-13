@@ -955,11 +955,16 @@ void Window::DoInstall(wxCommandEvent& event) {
 
 	  // copy bootloader
 	  if(write_bootl) {
+	    wxString boot_part;
 	    i->AddLog(_("Writing bootloader"));
 	    total_progress += prog_part;
 	    i->SetProgress(total_progress);
-
-	    wxString boot_part = device + _("2");
+	    if(device.Contains(_("mmc"))){
+	    	boot_part = device + _("p2");
+	    }
+	    else {
+	    	boot_part = device + _("2");
+	    }
 	    dd(C_STR(bootloader_file), C_STR(boot_part), 512);
 	  }
 
