@@ -11,7 +11,7 @@ string CommandParser::getParameter(string keyword, string keyword_s) {
   for(unsigned int i = 0; i < cmdline.size(); i++) {
     if(cmdline[i].compare("--" + keyword) == 0 || cmdline[i].compare("-" + keyword_s) == 0) {
       if(i + 1 < cmdline.size()) {
-        return cmdline[i+1];
+        return cmdline[i + 1];
       } else {
         return "";
       }

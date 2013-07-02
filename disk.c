@@ -54,7 +54,10 @@ int is_mounted(const char* partition) {
   }
 
   while(!feof(f)) {
-    fgets(buffer, 256, f);
+    if(fgets(buffer, 256, f) == NULL) {
+      //printf("get_mountpoint: error read /proc/mounts\n");
+      //return -1;
+    }
     if(strncmp(buffer, partition, strlen(partition)) == 0 && buffer[strlen(partition)] == ' ') {
       status = 1;
       break;
@@ -75,7 +78,10 @@ char* get_mountpoint(const char* source) {
   }
 
   while(!feof(f)) {
-    fgets(buffer, 256, f);
+    if(fgets(buffer, 256, f) == NULL) {
+      printf("get_mountpoint: error read /proc/mounts\n");
+      //return (char*) "ERROR";
+    }
     if(strncmp(buffer, source, strlen(source)) == 0 && buffer[strlen(source)] == ' ') {
       // get mount point
       int end = strlen(source) + 1;
@@ -111,7 +117,7 @@ int create_partitions(const char* dev, unsigned long bootsector_size) {
   PedFileSystemType* fs_type;
   PedTimer* timer;
 
-  printf("create partitions started! ped_device_get...\n dev = %s\n",dev);
+  printf("create partitions started! ped_device_get...\n dev = %s\n", dev);
   // get device from string e.g. "/dev/sdd"
   device = ped_device_get(dev);
   if(device == NULL) {
@@ -129,7 +135,7 @@ int create_partitions(const char* dev, unsigned long bootsector_size) {
   printf("partition table done! get file system type...\n");
   // get file system type (ext2)
   fs_type = ped_file_system_type_get(FILE_SYSTEM);
-  
+
 
   printf("get file system type done! create partitions...\n");
   // create partitions
@@ -158,25 +164,28 @@ int create_partitions(const char* dev, unsigned long bootsector_size) {
 
   //change boot partition id
   printf("create filesystem done! switch boot partition id to \"DF\" ...\n");
-  
-  change_to_bootit(dev);
-//  sprintf(command2, "sfdisk -c %s 2 df",dev);
-//  system(command2);
 
-  
+  change_to_bootit(dev);
+  //  sprintf(command2, "sfdisk -c %s 2 df",dev);
+  //  system(command2);
+
+
   //tune2fs
   printf("switch partition id done! tune2fs (ext3&lable Gnublin) ...\n");
-  if(strcmp(dev, "/dev/mmcblk0")==0){
-  	sprintf(command2, "tune2fs -j -L Gnublin %sp1",dev);
+  if(strcmp(dev, "/dev/mmcblk0") == 0) {
+    sprintf(command2, "tune2fs -j -L Gnublin %sp1", dev);
+  } else {
+    sprintf(command2, "tune2fs -j -L Gnublin %s1", dev);
   }
-  else
-	sprintf(command2, "tune2fs -j -L Gnublin %s1",dev);
-  system(command2);
+  if(system(command2) != 0) {
+    printf("create_partitions: error call system command tune2fs...!\n");
+    return -1;
+  }
 
   printf("tune2fs done! create partitions finished!\n");
-  
 
-  
+
+
   return 1;
 }
 
@@ -185,19 +194,23 @@ int create_partitions(const char* dev, unsigned long bootsector_size) {
  *
  *
  */
-int change_to_bootit (const char* dev){
-	printf("File to change to bootit id: %s\n",dev);
-	char puffer[1];
-	puffer[0]=0xdf;  //df = boot it id
-	int fd;
-	if(-1==(fd = open(dev, O_RDWR | O_NONBLOCK))){
-		printf("Error open file: %s\n",dev);
-		return -1;
-	}
-	lseek(fd, 466L,0);
-	write(fd,puffer,1);
-	close(fd);
-	return 0;
+int change_to_bootit(const char* dev) {
+  printf("File to change to bootit id: %s\n", dev);
+  char puffer[1];
+  puffer[0] = 0xdf; //df = boot it id
+  int fd;
+  if(-1 == (fd = open(dev, O_RDWR | O_NONBLOCK))) {
+    printf("Error open file: %s\n", dev);
+    return -1;
+  }
+  lseek(fd, 466L, 0);
+  if(write(fd, puffer, 1) != 1) {
+    printf("change_to_bootit: write error!\n");
+    close(fd);
+    return -1;
+  }
+  close(fd);
+  return 0;
 }
 
 /**
@@ -341,7 +354,10 @@ unsigned long dd(const char* input, const char* output, unsigned long blocksize)
   unsigned long total = 0;
 
   while(!feof(in)) {
-    fread(buffer, blocksize, 1, in);
+    if(fread(buffer, blocksize, 1, in) != blocksize) {
+      //printf("dd: Read error!\n");
+      //return -1;
+    }
     fwrite(buffer, blocksize, 1, out);
     total += blocksize;
   }

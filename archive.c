@@ -26,14 +26,16 @@
 
 int extract_archive(const char* filename, const char* to_path) {
 
-      char command[1000];
-    
-    sprintf(command, "tar -xzf %s -C %s",filename,to_path);
-    system(command);
-  
-  
+  char command[1000];
+
+  sprintf(command, "tar -xzf %s -C %s", filename, to_path);
+  if(system(command) != 0) {
+    printf("create_partitions: error call system command tune2fs...!\n");
+    return -1;
+  }
+
   /*
-  
+
   struct archive* a;
   struct archive* ext;
   struct archive_entry* entry;

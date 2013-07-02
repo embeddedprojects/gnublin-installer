@@ -35,8 +35,7 @@
 #include "progress.h"
 #include "backup.h"
 #include "installer.h"
-#include "md5.cpp"
-
+#include "calc_md5.h"
 
 #define mount_point "/tmp/SDCard"
 #define filePath "/usr/share/files/"
@@ -585,10 +584,10 @@ void Window::CopyDevice(FILE* in, FILE* out, long long kbytes, BackupProgress* b
   long start_time = time(NULL);
 
   while(!feof(in)) {
-    if(fread(buffer, blocksize, 1, in)!=blocksize){
-    	printf("CopyDevice: ERROR read in file\n");
-    	wxMessageBox(_("ERROR: read in file!"), _("Error"), wxOK | wxICON_ERROR);
-    	return;
+    if(fread(buffer, blocksize, 1, in) != blocksize) {
+      printf("CopyDevice: ERROR read in file\n");
+      wxMessageBox(_("ERROR: read in file!"), _("Error"), wxOK | wxICON_ERROR);
+      return;
     }
     fwrite(buffer, blocksize, 1, out);
     total++;
@@ -1096,6 +1095,7 @@ void Window::DoInstall(wxCommandEvent& event) {
 }
 
 int Window::ChecknLoad(wxString file, wxString url, InstallerFrame* i) {
+
   wxString md5file;
   wxString md5calc;
   i->AddLog(_("Downloading ") + file + _(".md5"));
