@@ -1,31 +1,33 @@
 /*  installer.cpp
- *
- *  Author:    Michael Schwarz
- *  Copyright (C) 2011 Michael Schwarz
- *  Edited by: Manuel Liebert
- *
- * GNUBLIN Installer
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- */
+*
+*  Author:    Michael Schwarz
+*  Copyright (C) 2011 Michael Schwarz
+*  Edited by: Manuel Liebert
+*
+* GNUBLIN Installer
+*
+* This program is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation; either version 2 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the Free Software
+* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*
+*/
 
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <iostream>
+#include <fstream>
 #include "net.h"
 #include "disk.h"
 #include "archive.h"
@@ -33,10 +35,11 @@
 #include "progress.h"
 #include "backup.h"
 #include "installer.h"
-#include "md5.h"
+#include "md5.cpp"
 
 
 #define mount_point "/tmp/SDCard"
+#define filePath "/usr/share/files/"
 
 IMPLEMENT_APP(installer);
 
@@ -75,101 +78,101 @@ Window::Window(wxFrame* frame, const wxString& title) : wxFrame(frame, -1, title
   main_sizer->Add(line_1, 0, wxEXPAND | wxALL, 5);
 
 
-  	wxGridSizer* bl_krnl_sizer;
-	bl_krnl_sizer = new wxGridSizer( 1, 2, 0, 0 );
-	
-	wxStaticBoxSizer* layout_bootloader;
-	layout_bootloader = new wxStaticBoxSizer( new wxStaticBox( this, wxID_ANY, _("Bootloader") ), wxVERTICAL );
-	
-	boot_no_change = new wxRadioButton( this, wxID_ANY, _("do not change"), wxDefaultPosition, wxDefaultSize, wxRB_GROUP );
-	layout_bootloader->Add( boot_no_change, 0, wxALL, 5 );
-	
-	boot_net = new wxRadioButton( this, wxID_ANY, _("fetch from http://gnublin.org/"), wxDefaultPosition, wxDefaultSize, 0 );
-	layout_bootloader->Add( boot_net, 0, wxALL, 5 );
-	
-	wxFlexGridSizer* sizer_boot;
-	sizer_boot = new wxFlexGridSizer( 1, 2, 0, 0 );
-	sizer_boot->AddGrowableCol( 1 );
-	sizer_boot->SetFlexibleDirection( wxBOTH );
-	sizer_boot->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
-	
-	boot_file = new wxRadioButton( this, wxID_ANY, _("use file"), wxDefaultPosition, wxDefaultSize, 0 );
-	sizer_boot->Add( boot_file, 0, wxALL, 5 );
-	
-	file_bootloader = new wxFilePickerCtrl( this, wxID_ANY, wxEmptyString, _("Select a file"), wxT("*"), wxDefaultPosition, wxSize( -1,-1 ), wxFLP_DEFAULT_STYLE|wxFLP_FILE_MUST_EXIST|wxFLP_OPEN );
-	sizer_boot->Add( file_bootloader, 0, wxALL|wxEXPAND, 5 );
-	
-	layout_bootloader->Add( sizer_boot, 0, wxEXPAND, 5 );
-	
-	bl_krnl_sizer->Add( layout_bootloader, 0, wxALL|wxEXPAND, 5 );
-	
-	wxStaticBoxSizer* layout_rootfs;
-	layout_rootfs = new wxStaticBoxSizer( new wxStaticBox( this, wxID_ANY, _("RootFS") ), wxVERTICAL );
-	
-	root_no_change = new wxRadioButton( this, wxID_ANY, _("do not change"), wxDefaultPosition, wxDefaultSize, wxRB_GROUP );
-	layout_rootfs->Add( root_no_change, 0, wxALL, 5 );
-	
-	root_net = new wxRadioButton( this, wxID_ANY, _("fetch from http://gnublin.org/"), wxDefaultPosition, wxDefaultSize, 0 );
-	layout_rootfs->Add( root_net, 0, wxALL, 5 );
-	
-	wxFlexGridSizer* sizer_root;
-	sizer_root = new wxFlexGridSizer( 1, 2, 0, 0 );
-	sizer_root->AddGrowableCol( 1 );
-	sizer_root->SetFlexibleDirection( wxBOTH );
-	sizer_root->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
-	
-	root_file = new wxRadioButton( this, wxID_ANY, _("use file"), wxDefaultPosition, wxDefaultSize, 0 );
-	sizer_root->Add( root_file, 0, wxALL, 5 );
-	
-	file_rootfs = new wxFilePickerCtrl( this, wxID_ANY, wxEmptyString, _("Select a file"), wxT("*"), wxDefaultPosition, wxSize( -1,-1 ), wxFLP_DEFAULT_STYLE|wxFLP_FILE_MUST_EXIST|wxFLP_OPEN );
-	sizer_root->Add( file_rootfs, 0, wxALL|wxEXPAND, 5 );
-	
-	layout_rootfs->Add( sizer_root, 0, wxEXPAND, 5 );
-	
-	bl_krnl_sizer->Add( layout_rootfs, 0, wxEXPAND|wxALL, 5 );
-	
-	main_sizer->Add( bl_krnl_sizer, 0, wxEXPAND, 5 );
-	
-	wxGridSizer* krnl_board_sizer;
-	krnl_board_sizer = new wxGridSizer( 1, 2, 0, 0 );
-	
-	wxStaticBoxSizer* layout_kernel;
-	layout_kernel = new wxStaticBoxSizer( new wxStaticBox( this, wxID_ANY, _("Kernel") ), wxVERTICAL );
-	
-	kernel_no_change = new wxRadioButton( this, wxID_ANY, _("do not change"), wxDefaultPosition, wxDefaultSize, wxRB_GROUP );
-	layout_kernel->Add( kernel_no_change, 0, wxALL, 5 );
-	
-	krnl_net = new wxRadioButton( this, wxID_ANY, _("fetch from http://gnublin.org/"), wxDefaultPosition, wxDefaultSize, 0 );
-	layout_kernel->Add( krnl_net, 0, wxALL, 5 );
-	
-	wxFlexGridSizer* sizer_kernel;
-	sizer_kernel = new wxFlexGridSizer( 1, 2, 0, 0 );
-	sizer_kernel->AddGrowableCol( 1 );
-	sizer_kernel->SetFlexibleDirection( wxBOTH );
-	sizer_kernel->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_ALL );
-	
-	krnl_file = new wxRadioButton( this, wxID_ANY, _("use file"), wxDefaultPosition, wxDefaultSize, 0 );
-	sizer_kernel->Add( krnl_file, 0, wxALL, 5 );
-	
-	file_zimage = new wxFilePickerCtrl( this, wxID_ANY, wxEmptyString, _("Select a file"), wxT("*"), wxDefaultPosition, wxSize( -1,-1 ), wxFLP_DEFAULT_STYLE|wxFLP_FILE_MUST_EXIST|wxFLP_OPEN );
-	sizer_kernel->Add( file_zimage, 1, wxALL|wxEXPAND, 5 );
-	
-	layout_kernel->Add( sizer_kernel, 0, wxEXPAND, 5 );
-	
-	krnl_board_sizer->Add( layout_kernel, 0, wxALL|wxEXPAND, 5 );
-	
-	wxStaticBoxSizer* sizer_board;
-	sizer_board = new wxStaticBoxSizer( new wxStaticBox( this, wxID_ANY, _("Board type (Downloadfiles)") ), wxVERTICAL );
-	
-	board_32mb = new wxRadioButton( this, wxID_ANY, _("32 MB"), wxDefaultPosition, wxDefaultSize, wxRB_GROUP );
-	sizer_board->Add( board_32mb, 0, wxALL, 5 );
-	
-	board_8mb = new wxRadioButton( this, wxID_ANY, _("8 MB"), wxDefaultPosition, wxDefaultSize, 0 );
-	sizer_board->Add( board_8mb, 0, wxALL, 5 );
-	
-	krnl_board_sizer->Add( sizer_board, 0, wxALL|wxEXPAND, 5 );
-	
-	main_sizer->Add( krnl_board_sizer, 0, wxEXPAND, 5 );
+  wxGridSizer* bl_krnl_sizer;
+  bl_krnl_sizer = new wxGridSizer(1, 2, 0, 0);
+
+  wxStaticBoxSizer* layout_bootloader;
+  layout_bootloader = new wxStaticBoxSizer(new wxStaticBox(this, wxID_ANY, _("Bootloader")), wxVERTICAL);
+
+  boot_no_change = new wxRadioButton(this, wxID_ANY, _("do not change"), wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
+  layout_bootloader->Add(boot_no_change, 0, wxALL, 5);
+
+  boot_net = new wxRadioButton(this, wxID_ANY, _("fetch from http://gnublin.org/"), wxDefaultPosition, wxDefaultSize, 0);
+  layout_bootloader->Add(boot_net, 0, wxALL, 5);
+
+  wxFlexGridSizer* sizer_boot;
+  sizer_boot = new wxFlexGridSizer(1, 2, 0, 0);
+  sizer_boot->AddGrowableCol(1);
+  sizer_boot->SetFlexibleDirection(wxBOTH);
+  sizer_boot->SetNonFlexibleGrowMode(wxFLEX_GROWMODE_SPECIFIED);
+
+  boot_file = new wxRadioButton(this, wxID_ANY, _("use file"), wxDefaultPosition, wxDefaultSize, 0);
+  sizer_boot->Add(boot_file, 0, wxALL, 5);
+
+  file_bootloader = new wxFilePickerCtrl(this, wxID_ANY, wxEmptyString, _("Select a file"), wxT("*"), wxDefaultPosition, wxSize(-1, -1), wxFLP_DEFAULT_STYLE | wxFLP_FILE_MUST_EXIST | wxFLP_OPEN);
+  sizer_boot->Add(file_bootloader, 0, wxALL | wxEXPAND, 5);
+
+  layout_bootloader->Add(sizer_boot, 0, wxEXPAND, 5);
+
+  bl_krnl_sizer->Add(layout_bootloader, 0, wxALL | wxEXPAND, 5);
+
+  wxStaticBoxSizer* layout_rootfs;
+  layout_rootfs = new wxStaticBoxSizer(new wxStaticBox(this, wxID_ANY, _("RootFS")), wxVERTICAL);
+
+  root_no_change = new wxRadioButton(this, wxID_ANY, _("do not change"), wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
+  layout_rootfs->Add(root_no_change, 0, wxALL, 5);
+
+  root_net = new wxRadioButton(this, wxID_ANY, _("fetch from http://gnublin.org/"), wxDefaultPosition, wxDefaultSize, 0);
+  layout_rootfs->Add(root_net, 0, wxALL, 5);
+
+  wxFlexGridSizer* sizer_root;
+  sizer_root = new wxFlexGridSizer(1, 2, 0, 0);
+  sizer_root->AddGrowableCol(1);
+  sizer_root->SetFlexibleDirection(wxBOTH);
+  sizer_root->SetNonFlexibleGrowMode(wxFLEX_GROWMODE_SPECIFIED);
+
+  root_file = new wxRadioButton(this, wxID_ANY, _("use file"), wxDefaultPosition, wxDefaultSize, 0);
+  sizer_root->Add(root_file, 0, wxALL, 5);
+
+  file_rootfs = new wxFilePickerCtrl(this, wxID_ANY, wxEmptyString, _("Select a file"), wxT("*"), wxDefaultPosition, wxSize(-1, -1), wxFLP_DEFAULT_STYLE | wxFLP_FILE_MUST_EXIST | wxFLP_OPEN);
+  sizer_root->Add(file_rootfs, 0, wxALL | wxEXPAND, 5);
+
+  layout_rootfs->Add(sizer_root, 0, wxEXPAND, 5);
+
+  bl_krnl_sizer->Add(layout_rootfs, 0, wxEXPAND | wxALL, 5);
+
+  main_sizer->Add(bl_krnl_sizer, 0, wxEXPAND, 5);
+
+  wxGridSizer* krnl_board_sizer;
+  krnl_board_sizer = new wxGridSizer(1, 2, 0, 0);
+
+  wxStaticBoxSizer* layout_kernel;
+  layout_kernel = new wxStaticBoxSizer(new wxStaticBox(this, wxID_ANY, _("Kernel")), wxVERTICAL);
+
+  kernel_no_change = new wxRadioButton(this, wxID_ANY, _("do not change"), wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
+  layout_kernel->Add(kernel_no_change, 0, wxALL, 5);
+
+  krnl_net = new wxRadioButton(this, wxID_ANY, _("fetch from http://gnublin.org/"), wxDefaultPosition, wxDefaultSize, 0);
+  layout_kernel->Add(krnl_net, 0, wxALL, 5);
+
+  wxFlexGridSizer* sizer_kernel;
+  sizer_kernel = new wxFlexGridSizer(1, 2, 0, 0);
+  sizer_kernel->AddGrowableCol(1);
+  sizer_kernel->SetFlexibleDirection(wxBOTH);
+  sizer_kernel->SetNonFlexibleGrowMode(wxFLEX_GROWMODE_ALL);
+
+  krnl_file = new wxRadioButton(this, wxID_ANY, _("use file"), wxDefaultPosition, wxDefaultSize, 0);
+  sizer_kernel->Add(krnl_file, 0, wxALL, 5);
+
+  file_zimage = new wxFilePickerCtrl(this, wxID_ANY, wxEmptyString, _("Select a file"), wxT("*"), wxDefaultPosition, wxSize(-1, -1), wxFLP_DEFAULT_STYLE | wxFLP_FILE_MUST_EXIST | wxFLP_OPEN);
+  sizer_kernel->Add(file_zimage, 1, wxALL | wxEXPAND, 5);
+
+  layout_kernel->Add(sizer_kernel, 0, wxEXPAND, 5);
+
+  krnl_board_sizer->Add(layout_kernel, 0, wxALL | wxEXPAND, 5);
+
+  wxStaticBoxSizer* sizer_board;
+  sizer_board = new wxStaticBoxSizer(new wxStaticBox(this, wxID_ANY, _("Board type (Downloadfiles)")), wxVERTICAL);
+
+  board_32mb = new wxRadioButton(this, wxID_ANY, _("32 MB"), wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
+  sizer_board->Add(board_32mb, 0, wxALL, 5);
+
+  board_8mb = new wxRadioButton(this, wxID_ANY, _("8 MB"), wxDefaultPosition, wxDefaultSize, 0);
+  sizer_board->Add(board_8mb, 0, wxALL, 5);
+
+  krnl_board_sizer->Add(sizer_board, 0, wxALL | wxEXPAND, 5);
+
+  main_sizer->Add(krnl_board_sizer, 0, wxEXPAND, 5);
 
 
 
@@ -275,10 +278,10 @@ void Window::ReadDevices() {
   listctrl_device->DeleteAllItems();
 
   while(drives && *drives) {
-    format_size(buffer, (*drives)->length *(*drives)->sector_size);
+    format_size(buffer, (*drives)->length * (*drives)->sector_size);
 
     // skip drives with size > 16 GB (change in settings)
-    if((*drives)->length *(*drives)->sector_size / 1024 / 1024 > hidesize && hidedevice) {
+    if((*drives)->length * (*drives)->sector_size / 1024 / 1024 > hidesize && hidedevice) {
       drives++;
       continue;
     }
@@ -467,7 +470,7 @@ void Window::ReadURLs() {
       while(s_child) {
         wxString board_file;
 
- 				// get kernel url
+        // get kernel url
         if(s_child->GetName() == wxT("kernel_32mb")) {
           wxString k = s_child->GetNodeContent();
           printf("kernel 32mb url: %s\n", C_STR(k));
@@ -500,7 +503,7 @@ void Window::ReadURLs() {
           wxString r = s_child->GetNodeContent();
           printf("rootfs 32mb url: %s\n", C_STR(r));
 
-	  url_rootfs_32mb = r;
+          url_rootfs_32mb = r;
         }
         if(s_child->GetName() == wxT("rootfs_8mb")) {
           wxString r = s_child->GetNodeContent();
@@ -574,7 +577,7 @@ void Window::StopBackup() {
 }
 
 void Window::CopyDevice(FILE* in, FILE* out, long long kbytes, BackupProgress* b) {
-  int blocksize = 1024 * 1024;
+  unsigned long blocksize = 1024 * 1024;
   char* buffer = (char*)malloc(blocksize);
   unsigned long total = 0;
   long long dev_size = kbytes;
@@ -582,7 +585,11 @@ void Window::CopyDevice(FILE* in, FILE* out, long long kbytes, BackupProgress* b
   long start_time = time(NULL);
 
   while(!feof(in)) {
-    fread(buffer, blocksize, 1, in);
+    if(fread(buffer, blocksize, 1, in)!=blocksize){
+    	printf("CopyDevice: ERROR read in file\n");
+    	wxMessageBox(_("ERROR: read in file!"), _("Error"), wxOK | wxICON_ERROR);
+    	return;
+    }
     fwrite(buffer, blocksize, 1, out);
     total++;
 
@@ -679,7 +686,7 @@ void Window::RestoreBackup(wxCommandEvent& event) {
   }
 
   // do you really want to do this, user?
-  if(wxMessageBox(_("Do you really want to do this?\nThis destroys all the data on this device!"), _("Warning"), wxYES_NO | wxICON_EXCLAMATION | wxNO_DEFAULT) == wxNO) {
+  if(wxMessageBox(_("Do you really want to do this?\nThis destroys all the data on this device!"), _("Warning"), wxYES_NO | wxICON_EXCLAMATION | wxYES_DEFAULT) == wxNO) {
     return;
   }
 
@@ -757,7 +764,7 @@ void Window::DoInstall(wxCommandEvent& event) {
   }
 
   // do you really want to do this, user?
-  if(wxMessageBox(_("Do you really want to do this?\nThis may destroy all the data on this device!"), _("Warning"), wxYES_NO | wxICON_EXCLAMATION | wxNO_DEFAULT) == wxNO) {
+  if(wxMessageBox(_("Do you really want to do this?\nThis may destroy all the data on this device!"), _("Warning"), wxYES_NO | wxICON_EXCLAMATION | wxYES_DEFAULT) == wxNO) {
     return;
   }
 
@@ -843,285 +850,311 @@ void Window::DoInstall(wxCommandEvent& event) {
 
   int prog_part = 100 / parts;
   int total_progress = 0;
-  int ErrorFlag=0;
+  int ErrorFlag = 0;
 
   i->SetProgress(total_progress);
   i->AddLog(_("Starting installation... This might take a few minutes"));
 
-  // download bootloader
-  if(dl_bootl & !ErrorFlag) {
-	mkdir("files", 0777);
-	i->AddLog(_("Downloading and checking bootloader"));
-	if(board_32mb->GetValue()){
-		if((ErrorFlag = ChecknLoad(_("apex.bin"), url_bootloader_32mb, i))){
-			i->AddLog(_("Error while load and md5 check bootloader file."));
-			return;
-		}
-	}
-	
-	else if(board_8mb->GetValue()){
-	  if((ErrorFlag = ChecknLoad(_("apex.bin"), url_bootloader_8mb, i))){
-	  		i->AddLog(_("Error while load and md5 check bootloader file."));
-			return;
-		}
-	}
+  if(!ErrorFlag) {
+    // check if mounted
     total_progress += prog_part;
     i->SetProgress(total_progress);
 
-    bootloader_file = _("files/apex.bin");
-  }
-
-  // download kernel
-  if(dl_kernel & !ErrorFlag) {
-    	mkdir("files", 0777);
-    	i->AddLog(_("Downloading and checking kernel"));
-	if(board_32mb->GetValue()){
-		if((ErrorFlag = ChecknLoad(_("kernel.tar.gz"), url_kernel_32mb, i))){
-			i->AddLog(_("Error while load and md5 check kernel file."));
-			return;
-		}
-	}
-	else if(board_8mb->GetValue()){
-		if((ErrorFlag = ChecknLoad(_("kernel.tar.gz"), url_kernel_8mb, i))){
-			i->AddLog(_("Error while load and md5 check kernel file."));
-			return;
-		}
-	}
-
-    total_progress += prog_part;
-    i->SetProgress(total_progress);
+    wxString boot_part;
+    wxString linux_part;
+    if(device.Contains(_("mmc"))) {
+      boot_part = device + _("p2");
+      linux_part = device + _("p1");
+    } else {
+      boot_part = device + _("2");
+      linux_part = device + _("1");
+    }
 
 
-    kernel_file = _("files/kernel.tar.gz");
-  }
+    int c;
+    for(c = 0; c < 2; c++) {
+      wxString part;
+      if(c == 0) {
+        part = boot_part;
+      } else if(c == 1) {
+        part = linux_part;
+      }
 
-  // download rootfs
-  if(dl_rootfs & !ErrorFlag) {
-    	mkdir("files", 0777);
-    	i->AddLog(_("Downloading and checking rootfs"));
-	if(board_32mb->GetValue()){
-		if((ErrorFlag = ChecknLoad(_("rootfs.tar.gz"), url_rootfs_32mb, i))){
-			i->AddLog(_("Error while load and md5 check rootfs file."));
-			return;
-		}
-	}
-	else if(board_8mb->GetValue()){
-		if((ErrorFlag = ChecknLoad(_("rootfs.tar.gz"), url_rootfs_8mb, i))){
-			i->AddLog(_("Error while load and md5 check rootfs file."));
-			return;
-		}
-	}
+      if(is_mounted(C_STR(part))) {
+        i->AddLog(_("Unmounting ") + part);
+        std::cout << "Unmounting: " << C_STR(part) << std::endl;
+        unmount_partition(get_mountpoint(C_STR(part)));
 
-    total_progress += prog_part;
-    i->SetProgress(total_progress);
+        if(is_mounted(C_STR(part))) {
+          i->AddLog(_("ERROR: can not unmount ") + part);
 
-    rootfs_file = _("files/rootfs.tar.gz");
-  }
-  if(!ErrorFlag){
-	  // check if mounted
-	  total_progress += prog_part;
-	  i->SetProgress(total_progress);
+          return;
+        }
+      }
+    }
+    // create partitions
+    if(repartition) {
+      i->AddLog(_("Creating partitions"));
+      total_progress += prog_part;
+      i->SetProgress(total_progress);
 
-	  int c;
-	  for(c = 0; c < 2; c++) {
-	  wxString part;
-	    if(device.Contains(_("mmc"))){
-	    	part = device + _("p") + wxString::FromAscii(c + 1 + '0');
-	    }
-	    else {
-	    	part = device + wxString::FromAscii(c + 1 + '0');
-	    }
+      create_partitions(C_STR(device), bootsector_size);
+    } else { //check if partitions are there
+      bool partitionFault = false;
+      std::ifstream ifile;
+      ifile.open(C_STR(boot_part));
+      if(ifile) {
+        ifile.close(); //File exists
+      } else { //file dont exist
+        i->AddLog(_("ERROR: could not open bootloader partition"));
+        partitionFault = true;
+      }
+      ifile.open(C_STR(linux_part));
+      if(ifile) {
+        ifile.close(); //File exists
+      } else { //file dont exist
+        i->AddLog(_("ERROR: could not open Linux partition"));
+        partitionFault = true;
+      }
+      if(partitionFault == true) {
+        if(wxMessageBox(_("ERROR: can not open Linux/bootloader partition file!\nWould you like to repartition the SD-Card?"), \
+                        _("Warning"), wxYES_NO | wxICON_QUESTION | wxYES_DEFAULT) == wxYES) {
 
-	    if(is_mounted(C_STR(part))) {
-	      i->AddLog(_("Unmounting ") + part);
-	      std::cout << "Unmounting: " << C_STR(part) << std::endl;
-	      unmount_partition(get_mountpoint(C_STR(part)));
+          if((write_kernel == 0) | (write_rootfs == 0) | (write_bootl == 0)) {
+            if(wxMessageBox(_("Bootloader, rootfs or kernel is selected not to change! Please click...\n 'Yes' to continue anyway (gnublin will not boot)! \n 'No' to cancel and make a different choice"), _("Warning"), wxYES_NO | wxICON_QUESTION | wxNO_DEFAULT) == wxNO) {
+              i->Close();
+              return;
+            }
+          }
+          i->AddLog(_("Creating partitions"));
+          create_partitions(C_STR(device), bootsector_size);
+        } else {
+          i->Close();
+          return;
+        }
+      }
+    }
 
-	      if(is_mounted(C_STR(part))) {
-		i->AddLog(_("ERROR: can not unmount ") + part);
+    // download bootloader
+    if(dl_bootl & !ErrorFlag) {
+      mkdir(filePath, 0755);
+      i->AddLog(_("Downloading and checking bootloader"));
+      if(board_32mb->GetValue()) {
+        if((ErrorFlag = ChecknLoad(_("apex.bin"), url_bootloader_32mb, i))) {
+          i->AddLog(_("Error while load and md5 check bootloader file."));
+          return;
+        }
+      }
 
-		return;
-	      }
-	    }
-	  }
-	  // create partitions
-	  if(repartition) {
-	    i->AddLog(_("Creating partitions"));
-	    total_progress += prog_part;
-	    i->SetProgress(total_progress);
+      else if(board_8mb->GetValue()) {
+        if((ErrorFlag = ChecknLoad(_("apex.bin"), url_bootloader_8mb, i))) {
+          i->AddLog(_("Error while load and md5 check bootloader file."));
+          return;
+        }
+      }
+      total_progress += prog_part;
+      i->SetProgress(total_progress);
 
-	    create_partitions(C_STR(device), bootsector_size);
-	  }
+      bootloader_file = (wxString)_(filePath) + _("apex.bin");
+    }
 
-	  // copy bootloader
-	  if(write_bootl) {
-	    wxString boot_part;
-	    i->AddLog(_("Writing bootloader"));
-	    total_progress += prog_part;
-	    i->SetProgress(total_progress);
-	    if(device.Contains(_("mmc"))){
-	    	boot_part = device + _("p2");
-	    }
-	    else {
-	    	boot_part = device + _("2");
-	    }
-	    dd(C_STR(bootloader_file), C_STR(boot_part), 512);
-	  }
+    // download kernel
+    if(dl_kernel & !ErrorFlag) {
+      mkdir(filePath, 0755);
+      i->AddLog(_("Downloading and checking kernel"));
+      if(board_32mb->GetValue()) {
+        if((ErrorFlag = ChecknLoad(_("kernel.tar.gz"), url_kernel_32mb, i))) {
+          i->AddLog(_("Error while load and md5 check kernel file."));
+          return;
+        }
+      } else if(board_8mb->GetValue()) {
+        if((ErrorFlag = ChecknLoad(_("kernel.tar.gz"), url_kernel_8mb, i))) {
+          i->AddLog(_("Error while load and md5 check kernel file."));
+          return;
+        }
+      }
 
-	if(write_rootfs | write_kernel){
-	  // mount
-	  i->AddLog(_("Mounting Linux partition"));
-	  total_progress += prog_part;
-	  i->SetProgress(total_progress);
-
-	  mkdir(mount_point, 0777);
-	  wxString linux_part;
-	  if(device.Contains(_("mmc"))){
-	  	linux_part = device + _("p1");
-	  }
-	  else 
-	  	linux_part = device + _("1");
-	  mount_partition(C_STR(linux_part), mount_point);
-
-	  if(!is_mounted(C_STR(linux_part))) {
-	    i->AddLog(_("ERROR: can not mount filesystem"));
-	    return;
-	  }
-	  // extract rootfs
-	  if(write_rootfs) {
-	    i->AddLog(_("Extracting RootFS"));
-	    total_progress += prog_part;
-	    i->SetProgress(total_progress);
-
-	    extract_archive(C_STR(rootfs_file), mount_point);
-	  }
-
-	std::cout << "copy rootfs done! starting copy kernel" << std::endl;
-
-	  // copy kernel
-	  if(write_kernel) {
-	    i->AddLog(_("Copying kernel"));
-	    total_progress += prog_part;
-	    i->SetProgress(total_progress);
-	    extract_archive(C_STR(kernel_file), mount_point);
-	  }
-
-	std::cout << "copy kernel done! syncing ..." << std::endl;
+      total_progress += prog_part;
+      i->SetProgress(total_progress);
 
 
-	  // sync
-	  i->AddLog(_("Syncing..."));
-	  total_progress += prog_part;
-	  i->SetProgress(total_progress);
+      kernel_file = (wxString) _(filePath) + _("kernel.tar.gz");
+    }
 
-	  sync_card();
+    // download rootfs
+    if(dl_rootfs & !ErrorFlag) {
+      mkdir(filePath, 0755);
+      i->AddLog(_("Downloading and checking rootfs"));
+      if(board_32mb->GetValue()) {
+        if((ErrorFlag = ChecknLoad(_("rootfs.tar.gz"), url_rootfs_32mb, i))) {
+          i->AddLog(_("Error while load and md5 check rootfs file."));
+          return;
+        }
+      } else if(board_8mb->GetValue()) {
+        if((ErrorFlag = ChecknLoad(_("rootfs.tar.gz"), url_rootfs_8mb, i))) {
+          i->AddLog(_("Error while load and md5 check rootfs file."));
+          return;
+        }
+      }
 
-	 std::cout << "sync done! unmount partition..." << std::endl;
-	
-	
-	  for(c = 0; c < 2; c++) {
-	  wxString part;
-	    if(device.Contains(_("mmc"))){
-	    	part = device + _("p") + wxString::FromAscii(c + 1 + '0');
-	    }
-	    else {
-	    	part = device + wxString::FromAscii(c + 1 + '0');
-	    }
-	    sleep(4);
-	    if(is_mounted(C_STR(part))) {
-	      i->AddLog(_("Unmounting ") + part);
-	      std::cout << "Unmounting: " << C_STR(part) << std::endl;
+      total_progress += prog_part;
+      i->SetProgress(total_progress);
 
-	      unmount_partition(get_mountpoint(C_STR(part)));
-
-	      if(is_mounted(C_STR(part))) {
-	      sleep(4);
-	      std::cout << "Unmounting: " << mount_point << std::endl;
-	        unmount_partition(mount_point);
-	        if(is_mounted(C_STR(part))){
-			i->AddLog(_("ERROR: can not unmount ") + part);
-			std::cout << "ERROR: can not unmount " << C_STR(part);
-			return;
-		}
-	      }
-	    }
-	  }
-
-	std::cout << "unmount done!" << std::endl;
-	}
+      rootfs_file = (wxString) _(filePath) + _("rootfs.tar.gz");
+    }
 
 
-	  i->AddLog(_("Done!"));
+    // copy bootloader
+    if(write_bootl) {
+      i->AddLog(_("Writing bootloader"));
+      total_progress += prog_part;
+      i->SetProgress(total_progress);
+      dd(C_STR(bootloader_file), C_STR(boot_part), 512);
+    }
+
+    if(write_rootfs | write_kernel) {
+      // mount
+      i->AddLog(_("Mounting Linux partition"));
+      total_progress += prog_part;
+      i->SetProgress(total_progress);
+
+      mkdir(mount_point, 0777);
+      mount_partition(C_STR(linux_part), mount_point);
+
+      if(!is_mounted(C_STR(linux_part))) {
+        i->AddLog(_("ERROR: can not mount filesystem"));
+        return;
+      }
+      // extract rootfs
+      if(write_rootfs) {
+        i->AddLog(_("Extracting RootFS"));
+        total_progress += prog_part;
+        i->SetProgress(total_progress);
+
+        extract_archive(C_STR(rootfs_file), mount_point);
+      }
+
+      std::cout << "copy rootfs done! starting copy kernel" << std::endl;
+
+      // copy kernel
+      if(write_kernel) {
+        i->AddLog(_("Copying kernel"));
+        total_progress += prog_part;
+        i->SetProgress(total_progress);
+        extract_archive(C_STR(kernel_file), mount_point);
+      }
+
+      std::cout << "copy kernel done! syncing ..." << std::endl;
+
+
+      // sync
+      i->AddLog(_("Syncing..."));
+      total_progress += prog_part;
+      i->SetProgress(total_progress);
+
+      sync_card();
+
+      std::cout << "sync done! unmount partition..." << std::endl;
+
+
+      for(c = 0; c < 2; c++) {
+        wxString part;
+        if(device.Contains(_("mmc"))) {
+          part = device + _("p") + wxString::FromAscii(c + 1 + '0');
+        } else {
+          part = device + wxString::FromAscii(c + 1 + '0');
+        }
+        sleep(4);
+        if(is_mounted(C_STR(part))) {
+          i->AddLog(_("Unmounting ") + part);
+          std::cout << "Unmounting: " << C_STR(part) << std::endl;
+
+          unmount_partition(get_mountpoint(C_STR(part)));
+
+          if(is_mounted(C_STR(part))) {
+            sleep(4);
+            std::cout << "Unmounting: " << mount_point << std::endl;
+            unmount_partition(mount_point);
+            if(is_mounted(C_STR(part))) {
+              i->AddLog(_("ERROR: can not unmount ") + part);
+              std::cout << "ERROR: can not unmount " << C_STR(part);
+              return;
+            }
+          }
+        }
+      }
+
+      std::cout << "unmount done!" << std::endl;
+    }
+
+
+    i->AddLog(_("Done!"));
   }
   i->AddLog(_("You may close this window now."));
 
   i->SetProgress(100);
 }
 
-int Window::ChecknLoad(wxString file, wxString url, InstallerFrame* i){
-	wxString md5file;
-	wxString md5calc;
-	i->AddLog(_("Downloading ")+file+_(".md5"));
-	get_file((C_STR(url + _(".md5"))), C_STR(_("files/")+file+_(".md5")));
+int Window::ChecknLoad(wxString file, wxString url, InstallerFrame* i) {
+  wxString md5file;
+  wxString md5calc;
+  i->AddLog(_("Downloading ") + file + _(".md5"));
+  get_file((C_STR(url + _(".md5"))), C_STR(_(filePath) + file + _(".md5")));
 
-	FILE* file_bl = fopen(C_STR(_("files/")+file), "rb");
-	if(file_bl == NULL) {
-		i->AddLog(_("Downloading ")+file);
-		get_file(C_STR(url), C_STR(_("files/")+file));
-	}
-	else 
-		fclose(file_bl);
+  FILE* file_bl = fopen(C_STR(_(filePath) + file), "rb");
+  if(file_bl == NULL) {
+    i->AddLog(_("Downloading ") + file);
+    get_file(C_STR(url), C_STR(_(filePath) + file));
+  } else {
+    fclose(file_bl);
+  }
 
-	wxFileInputStream file_md5(_("files/")+file + _(".md5"));
-	if(!file_md5){
-		//could not open file!
-	}
+  wxFileInputStream file_md5(_(filePath) + file + _(".md5"));
+  if(!file_md5) {
+    //could not open file!
+  }
 
-	wxTextInputStream tfile_md5 (file_md5);
-	md5file = tfile_md5.ReadLine();
-	if (md5file.Contains(_("DOCTYPE HTML PUBLIC"))){
-		i->AddLog(_("md5 file not found on the server"));
-		std::cout << "md5 file not found on the server" << std::endl;
-		wxMessageBox(_("Error while getting the ") + file + _(".md5 file! Please check the links in the settings.xml file!"), _("Error"), wxOK | wxICON_ERROR);
-		return -1;
-	}
-	else if (md5file.Len()==0){
-		i->AddLog(_("could not load md5 file"));
-		std::cout << "could not load md5 file" << std::endl;
-		wxMessageBox(_("Error while getting the ") + file + _(".md5 file! Perhaps there is no internet connection?"), _("Error"), wxOK | wxICON_ERROR);
-		return -1;
-	}
-	else{
-	
-		std::cout << "md5file: " << C_STR(md5file) << std::endl;
-		md5calc = wxString::FromAscii(calc_md5(C_STR(_("files/")+file)));
-		std::cout << "md5calc: " << C_STR(md5calc) << std::endl;
-		if(md5file.Contains(md5calc)){
-			i->AddLog(_("md5 check: ok"));
-			std::cout << "md5 check: ok" << std::endl;
-		}
-		else{
-			i->AddLog(_("md5 check: failed (old or corrupt file) -> redownload..."));
-			std::cout << "md5 check: failed (old or corrupt file) -> redownload..." << std::endl;
-			get_file(C_STR(url), C_STR(_("files/")+file));
-			md5calc = wxString::FromAscii(calc_md5(C_STR(_("files/")+file)));
-			std::cout << "md5calc: " << C_STR(md5calc) << std::endl;
-			if(md5file.Contains(md5calc)){
-				i->AddLog(_("md5 check: ok"));
-				std::cout << "md5 check: ok" << std::endl;
-			}
-			else {
-				i->AddLog(_("md5 check: failed again"));
-				std::cout << "md5 check: failed again" << std::endl;
-				if(wxMessageBox(_("Error while getting/md5-checking the ") + file + _(" file! Perhaps there is no internet connection? For further information check the command line. Continue anyway?(Absolutely not recomended!)"), _("Error"), wxYES_NO | wxICON_EXCLAMATION | wxNO_DEFAULT) == wxNO) {
-					return -1;
-				}
-				else
-					return 0;
-			}
-	}
-	}
-	return 0;
+  wxTextInputStream tfile_md5(file_md5);
+  md5file = tfile_md5.ReadLine();
+  if(md5file.Contains(_("DOCTYPE HTML PUBLIC"))) {
+    i->AddLog(_("md5 file not found on the server"));
+    std::cout << "md5 file not found on the server" << std::endl;
+    wxMessageBox(_("Error while getting the ") + file + _(".md5 file! Please check the links in the settings.xml file or contact us on gnublin.org"), _("Error"), wxOK | wxICON_ERROR);
+    return -1;
+  } else if(md5file.Len() == 0) {
+    i->AddLog(_("could not load md5 file"));
+    std::cout << "could not load md5 file" << std::endl;
+    wxMessageBox(_("Error while getting the ") + file + _(".md5 file! Perhaps there is no internet connection?"), _("Error"), wxOK | wxICON_ERROR);
+    return -1;
+  } else {
+
+    std::cout << "md5file: " << C_STR(md5file) << std::endl;
+    md5calc = wxString::FromAscii(calc_md5(C_STR(_(filePath) + file)));
+    std::cout << "md5calc: " << C_STR(md5calc) << std::endl;
+    if(md5file.Contains(md5calc)) {
+      i->AddLog(_("md5 check: ok"));
+      std::cout << "md5 check: ok" << std::endl;
+    } else {
+      i->AddLog(_("md5 check: failed (old or corrupt file) -> redownload..."));
+      std::cout << "md5 check: failed (old or corrupt file) -> redownload..." << std::endl;
+      get_file(C_STR(url), C_STR(_(filePath) + file));
+      md5calc = wxString::FromAscii(calc_md5(C_STR(_(filePath) + file)));
+      std::cout << "md5calc: " << C_STR(md5calc) << std::endl;
+      if(md5file.Contains(md5calc)) {
+        i->AddLog(_("md5 check: ok"));
+        std::cout << "md5 check: ok" << std::endl;
+      } else {
+        i->AddLog(_("md5 check: failed again"));
+        std::cout << "md5 check: failed again" << std::endl;
+        if(wxMessageBox(_("Error while getting/md5-checking the ") + file + _(" file! Perhaps there is no internet connection? For further information check the command line. Continue anyway?(Absolutely not recomended!)"), _("Error"), wxYES_NO | wxICON_EXCLAMATION | wxNO_DEFAULT) == wxNO) {
+          return -1;
+        } else {
+          return 0;
+        }
+      }
+    }
+  }
+  return 0;
 }
 
 void Window::SetHideDev(bool h) {
