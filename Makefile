@@ -50,8 +50,13 @@ release: gnublin-installer
 	@mkdir -p deb/DEBIAN
 	@mkdir -p /tmp/gnublin-installer
 
-	@cp ./gnublin-installer deb/usr/bin/gnublin-installer
+	@cp ./gnublin-installer deb/usr/share/gnublin-installer
 	@cp ./settings.xml deb/usr/share/gnublin-installer
+	
+	# generate starter file
+	@echo "#!/bin/bash" > deb/usr/bin/gnublin-installer
+	@echo "cd /usr/share/gnublin-installer" >> deb/usr/bin/gnublin-installer
+	@echo "./gnublin-installer" >> deb/usr/bin/gnublin-installer
 
 	# determine installed size of package
 	@DEBSIZE=`du -c -k -s deb/usr/* | tail -n 1 | gawk '/[0-9]/ { print $1 }'`
