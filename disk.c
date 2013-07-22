@@ -109,7 +109,7 @@ void create_ext2_timer(PedTimer* timer, void* context) {
  * partition with an ext2 filesystem
  *
  */
-int create_partitions(const char* dev, unsigned long bootsector_size) {
+int create_partitions(const char* dev, unsigned long bootsector_size, char* linux_partition, char* kernel_partition) {
   PedDisk* disk;
   PedDevice* device;
   PedPartition* boot_part;
@@ -152,7 +152,7 @@ int create_partitions(const char* dev, unsigned long bootsector_size) {
   ped_disk_add_partition(disk, linux_part, constraint);
   ped_constraint_destroy(constraint);
 
-  printf("add partitions done! create timer...\n");
+/*  printf("add partitions done! create timer...\n");
   // create timer
   timer = ped_timer_new(create_ext2_timer, NULL);
 
@@ -160,7 +160,8 @@ int create_partitions(const char* dev, unsigned long bootsector_size) {
   // create filesystem
   ped_file_system_create(&kernel_part->geom, fs_type, timer);
   ped_file_system_create(&linux_part->geom, fs_type, timer);
-
+*/
+	
   printf("create filesystem done! commit to hardware...\n");
   // commit to hardware
   ped_disk_commit_to_dev(disk);
@@ -171,9 +172,37 @@ int create_partitions(const char* dev, unsigned long bootsector_size) {
 
 
   change_to_bootit(dev);
-  //  sprintf(command2, "sfdisk -c %s 2 df",dev);
+  
+  printf("switch partition id done! set labels Gnublin and Kernel ...\n");
+  
+  
+  
+    sprintf(command2, "mkfs -t ext3 %s", kernel_partition);
+  if(system(command2) != 0) {
+    printf("ERROR: error call system command create kernel partition...!\n");
+    return -1;
+  }
+  
+    sprintf(command2, "mkfs -t ext4 %s", linux_partition);
+  if(system(command2) != 0) {
+    printf("ERROR: error call system command create gnublin partition...!\n");
+    return -1;
+  }
+  
+  sprintf(command2, "tune2fs  -L Kernel %s", kernel_partition);
+  if(system(command2) != 0) {
+    printf("ERROR: error call system command Kernel tune2fs...!\n");
+    return -1;
+  }
+    sprintf(command2, "tune2fs  -L Gnublin %s", linux_partition);
+  if(system(command2) != 0) {
+    printf("ERROR: error call system command gnublin tune2fs...!\n");
+    return -1;
+  }
+  
+  
+/*  //  sprintf(command2, "sfdisk -c %s 2 df",dev);
   //  system(command2);
-
 
   //tune2fs
   printf("switch partition id done! tune2fs (ext3&lable Gnublin) ...\n");
@@ -197,7 +226,7 @@ int create_partitions(const char* dev, unsigned long bootsector_size) {
     printf("create_partitions: error call system command Gnublin tune2fs...!\n");
     return -1;
   }
-
+*/
 
   printf("tune2fs done! create partitions finished!\n");
 

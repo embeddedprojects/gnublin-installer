@@ -909,7 +909,7 @@ void Window::DoInstall(wxCommandEvent& event) {
       total_progress += prog_part;
       i->SetProgress(total_progress);
 
-      create_partitions(C_STR(device), bootsector_size);
+      create_partitions(C_STR(device), bootsector_size, C_STR(linux_part), C_STR(kernel_part));
     } else { //check if partitions are there
       bool partitionFault = false;
       std::ifstream ifile;
@@ -945,7 +945,7 @@ void Window::DoInstall(wxCommandEvent& event) {
             }
           }
           i->AddLog(_("Creating partitions"));
-          create_partitions(C_STR(device), bootsector_size);
+          create_partitions(C_STR(device), bootsector_size, C_STR(linux_part), C_STR(kernel_part));
         } else {
           i->Close();
           return;

@@ -65,7 +65,7 @@ release: gnublin-installer
 	@echo "Section: devel" >> deb/DEBIAN/control
 	@echo "Priority: optional" >> deb/DEBIAN/control
 	@echo "Architecture: $(ARCHITECTURE)" >> deb/DEBIAN/control
-	@echo "Depends: libparted0debian1, libcurl3, libwxgtk2.8-0, libc6" >> deb/DEBIAN/control
+	@echo "Depends: libparted0debian1, libcurl3, libwxgtk2.8-0, libc6, util-linux" >> deb/DEBIAN/control
 	@echo "Installed-Size: $(DEBSIZE)" >> deb/DEBIAN/control
 	@echo "Maintainer: Manuel Liebert <man.liebert@gmail.com>" >> deb/DEBIAN/control
 	@echo "Description: Graphical installer for GNUBLIN embedded Linux board" >> deb/DEBIAN/control

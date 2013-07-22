@@ -20,7 +20,7 @@ int is_root();
 Partition** get_partitions(const char* dev);
 Drive** get_devices();
 void format_size(char* buffer, unsigned long long size);
-int create_partitions(const char* dev, unsigned long bootsector_size);
+int create_partitions(const char* dev, unsigned long bootsector_size, char* linux_partition, char* kernel_partition);
 int mount_partition(const char* partition, const char* mount_point);
 int unmount_partition(const char* mount_point);
 void sync_card();
