@@ -1098,7 +1098,7 @@ void Window::DoInstall(wxCommandEvent& event) {
       std::cout << "sync done! unmount partition..." << std::endl;
 
 
-      for(c = 0; c < 2; c++) {
+      for(c = 0; c < 3; c++) {
         wxString part;
         if(device.Contains(_("mmc"))) {
           part = device + _("p") + wxString::FromAscii(c + 1 + '0');
