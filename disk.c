@@ -116,7 +116,7 @@ int create_partitions(const char* dev, unsigned long bootsector_size, char* linu
   PedPartition* linux_part;
   PedPartition* kernel_part;
   PedFileSystemType* fs_type;
-  PedTimer* timer;
+ // PedTimer* timer;
 
   printf("create partitions started! ped_device_get...\n dev = %s\n", dev);
   // get device from string e.g. "/dev/sdd"
