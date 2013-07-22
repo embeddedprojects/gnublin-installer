@@ -38,6 +38,11 @@
 #include "calc_md5.h"
 
 #define mount_point "/tmp/SDCard"
+#define mount_point_kernel "/tmp/SDCard/kernel"
+#define mount_point_gnublin "/tmp/SDCard/gnublin"
+#define extract_kernel_path "/tmp/SDCard/extract_kernel"
+#define kernel_path "/tmp/SDCard/extract_kernel/zImage"
+#define lib_path "/tmp/SDCard/extract_kernel/lib"
 #define filePath "/usr/share/files/"
 
 IMPLEMENT_APP(installer);
@@ -861,23 +866,30 @@ void Window::DoInstall(wxCommandEvent& event) {
 
     wxString boot_part;
     wxString linux_part;
+    wxString kernel_part;
     if(device.Contains(_("mmc"))) {
       boot_part = device + _("p2");
-      linux_part = device + _("p1");
+      linux_part = device + _("p3");
+      kernel_part = device + _("p1");
     } else {
       boot_part = device + _("2");
-      linux_part = device + _("1");
+      linux_part = device + _("3");
+      kernel_part = device + _("1");
     }
 
 
+
     int c;
-    for(c = 0; c < 2; c++) {
+    for(c = 0; c < 3; c++) {
       wxString part;
       if(c == 0) {
         part = boot_part;
       } else if(c == 1) {
+        part = kernel_part;
+      } else if(c == 2) {
         part = linux_part;
       }
+
 
       if(is_mounted(C_STR(part))) {
         i->AddLog(_("Unmounting ") + part);
@@ -913,6 +925,13 @@ void Window::DoInstall(wxCommandEvent& event) {
         ifile.close(); //File exists
       } else { //file dont exist
         i->AddLog(_("ERROR: could not open Linux partition"));
+        partitionFault = true;
+      }
+      ifile.open(C_STR(kernel_part));
+      if(ifile) {
+        ifile.close(); //File exists
+      } else { //file dont exist
+        i->AddLog(_("ERROR: could not open kernel partition"));
         partitionFault = true;
       }
       if(partitionFault == true) {
@@ -1018,10 +1037,18 @@ void Window::DoInstall(wxCommandEvent& event) {
       i->SetProgress(total_progress);
 
       mkdir(mount_point, 0777);
-      mount_partition(C_STR(linux_part), mount_point);
+      mkdir(mount_point_kernel, 0777);
+      mkdir(mount_point_gnublin, 0777);
+      mkdir(extract_kernel_path, 0777);
+      mount_partition(C_STR(linux_part), mount_point_gnublin);
+      mount_partition(C_STR(kernel_part), mount_point_kernel);
 
       if(!is_mounted(C_STR(linux_part))) {
-        i->AddLog(_("ERROR: can not mount filesystem"));
+        i->AddLog(_("ERROR: can not mount gnublin filesystem"));
+        return;
+      }
+      if(!is_mounted(C_STR(kernel_part))) {
+        i->AddLog(_("ERROR: can not mount kernel filesystem"));
         return;
       }
       // extract rootfs
@@ -1030,17 +1057,32 @@ void Window::DoInstall(wxCommandEvent& event) {
         total_progress += prog_part;
         i->SetProgress(total_progress);
 
-        extract_archive(C_STR(rootfs_file), mount_point);
+        extract_archive(C_STR(rootfs_file), mount_point_gnublin);
       }
+
 
       std::cout << "copy rootfs done! starting copy kernel" << std::endl;
 
       // copy kernel
       if(write_kernel) {
-        i->AddLog(_("Copying kernel"));
+        i->AddLog(_("extracting kernel"));
         total_progress += prog_part;
         i->SetProgress(total_progress);
-        extract_archive(C_STR(kernel_file), mount_point);
+        extract_archive(C_STR(kernel_file), extract_kernel_path);
+      }
+      char* cp_in = (char*)kernel_path;
+      char* cp_out = (char*)mount_point_kernel;
+      char command[1000];
+      sprintf(command, "cp %s %s", cp_in, cp_out);
+      if(system(command) != 0) {
+        printf("ERROR call cp systemcall to copy kernel...!\n");
+      }
+
+      cp_in = (char*) lib_path;
+      cp_out = (char*) mount_point_gnublin;
+      sprintf(command, "cp -r %s %s", cp_in, cp_out);
+      if(system(command) != 0) {
+        printf("ERROR call cp systemcall to copy lib...!\n");
       }
 
       std::cout << "copy kernel done! syncing ..." << std::endl;
@@ -1072,8 +1114,8 @@ void Window::DoInstall(wxCommandEvent& event) {
 
           if(is_mounted(C_STR(part))) {
             sleep(4);
-            std::cout << "Unmounting: " << mount_point << std::endl;
-            unmount_partition(mount_point);
+            std::cout << "Unmounting: " << mount_point_gnublin << std::endl;
+            unmount_partition(mount_point_gnublin);
             if(is_mounted(C_STR(part))) {
               i->AddLog(_("ERROR: can not unmount ") + part);
               std::cout << "ERROR: can not unmount " << C_STR(part);

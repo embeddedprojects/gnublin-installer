@@ -114,6 +114,7 @@ int create_partitions(const char* dev, unsigned long bootsector_size) {
   PedDevice* device;
   PedPartition* boot_part;
   PedPartition* linux_part;
+  PedPartition* kernel_part;
   PedFileSystemType* fs_type;
   PedTimer* timer;
 
@@ -140,21 +141,24 @@ int create_partitions(const char* dev, unsigned long bootsector_size) {
   printf("get file system type done! create partitions...\n");
   // create partitions
   boot_part = ped_partition_new(disk, PED_PARTITION_NORMAL, fs_type, 0, bootsector_size / device->sector_size);
-  linux_part = ped_partition_new(disk, PED_PARTITION_NORMAL, fs_type, bootsector_size / device->sector_size, device->length - 1);
+  kernel_part = ped_partition_new(disk, PED_PARTITION_NORMAL, fs_type, bootsector_size / device->sector_size, (2 * (bootsector_size / device->sector_size)));
+  linux_part = ped_partition_new(disk, PED_PARTITION_NORMAL, fs_type, (2 * (bootsector_size / device->sector_size)), device->length - 1);
 
   printf("create partitions done! add partitions to partition table...\n");
   // add partitions to partition table
   PedConstraint* constraint = ped_constraint_any(device);
-  ped_disk_add_partition(disk, linux_part, constraint);
+  ped_disk_add_partition(disk, kernel_part, constraint);
   ped_disk_add_partition(disk, boot_part, constraint);
+  ped_disk_add_partition(disk, linux_part, constraint);
   ped_constraint_destroy(constraint);
 
   printf("add partitions done! create timer...\n");
   // create timer
   timer = ped_timer_new(create_ext2_timer, NULL);
 
-  printf("create timer done! create filesystem...\n");
+  printf("create timer done! create filesystems...\n");
   // create filesystem
+  ped_file_system_create(&kernel_part->geom, fs_type, timer);
   ped_file_system_create(&linux_part->geom, fs_type, timer);
 
   printf("create filesystem done! commit to hardware...\n");
@@ -165,6 +169,7 @@ int create_partitions(const char* dev, unsigned long bootsector_size) {
   //change boot partition id
   printf("create filesystem done! switch boot partition id to \"DF\" ...\n");
 
+
   change_to_bootit(dev);
   //  sprintf(command2, "sfdisk -c %s 2 df",dev);
   //  system(command2);
@@ -173,14 +178,26 @@ int create_partitions(const char* dev, unsigned long bootsector_size) {
   //tune2fs
   printf("switch partition id done! tune2fs (ext3&lable Gnublin) ...\n");
   if(strcmp(dev, "/dev/mmcblk0") == 0) {
-    sprintf(command2, "tune2fs -j -L Gnublin %sp1", dev);
+    sprintf(command2, "tune2fs -j -L Kernel %sp1", dev);
   } else {
-    sprintf(command2, "tune2fs -j -L Gnublin %s1", dev);
+    sprintf(command2, "tune2fs -j -L Kernel %s1", dev);
   }
   if(system(command2) != 0) {
-    printf("create_partitions: error call system command tune2fs...!\n");
+    printf("create_partitions: error call system command Kernel tune2fs...!\n");
     return -1;
   }
+
+  printf("Gnublin tune2fs done!! tune2fs (ext4&lable Gnublin) ...\n");
+  if(strcmp(dev, "/dev/mmcblk0") == 0) {
+    sprintf(command2, "tune2fs -O extents,uninit_bg,dir_index -L Gnublin %sp3", dev);
+  } else {
+    sprintf(command2, "tune2fs -O extents,uninit_bg,dir_index -L Gnublin %s3", dev);
+  }
+  if(system(command2) != 0) {
+    printf("create_partitions: error call system command Gnublin tune2fs...!\n");
+    return -1;
+  }
+
 
   printf("tune2fs done! create partitions finished!\n");
 
@@ -218,7 +235,15 @@ int change_to_bootit(const char* dev) {
  *
  */
 int mount_partition(const char* partition, const char* mount_point) {
-  return mount(partition, mount_point, "ext3", 0, NULL);
+
+  char command[1000];
+
+  sprintf(command, "mount %s %s", partition, mount_point);
+  if(system(command) != 0) {
+    printf("tar: ERROR call tar systemcall...!\n");
+    return -1;
+  }
+  return 0; //mount(partition, mount_point, "ext4", 0, NULL);
 }
 
 

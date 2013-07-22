@@ -30,7 +30,7 @@ int extract_archive(const char* filename, const char* to_path) {
 
   sprintf(command, "tar -xzf %s -C %s", filename, to_path);
   if(system(command) != 0) {
-    printf("create_partitions: error call system command tune2fs...!\n");
+    printf("tar: ERROR call tar systemcall...!\n");
     return -1;
   }
 
