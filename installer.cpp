@@ -790,6 +790,7 @@ void Window::DoInstall(wxCommandEvent& event) {
   bool file_bootl;
   wxString bootloader_file;
   bool dl_kernel;
+  bool file_kernel;
   bool write_kernel;
   wxString kernel_file;
   bool dl_rootfs;
@@ -817,7 +818,11 @@ void Window::DoInstall(wxCommandEvent& event) {
   write_kernel = !kernel_no_change->GetValue();
   // download kernel?
   dl_kernel = krnl_net->GetValue();
-  kernel_file = file_zimage->GetPath();
+  //kernel file?
+  file_kernel = krnl_file->GetValue();
+  if(file_kernel){
+    kernel_file = file_zimage->GetPath();
+  }
   // write rootfs?
   write_rootfs = !root_no_change->GetValue();
   // download rootfs?

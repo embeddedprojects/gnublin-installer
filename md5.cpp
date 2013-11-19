@@ -74,7 +74,7 @@ inline MD5::uint4 MD5::H(uint4 x, uint4 y, uint4 z) {
 }
 
 inline MD5::uint4 MD5::I(uint4 x, uint4 y, uint4 z) {
-  return y ^(x | ~z);
+  return y ^ (x | ~z);
 }
 
 // rotate_left rotates x left n bits.
