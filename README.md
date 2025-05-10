@@ -1,7 +1,13 @@
 gnublin-installer
 =================
 
-Dependencies:
+## build and run using docker compose
+Clone the repository and run  
+```
+docker compose up --build
+```
+
+## Dependencies:
 
 - libcurl3-dev
 - libparted0-dev

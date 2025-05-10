@@ -1,0 +1,10 @@
+
+services:
+  installer:
+    image: gnublin-installer
+    build: .
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix  # x11 socket to get gui
+    environment:
+      - DISPLAY
+    privileged: true                   # to access hw (sd-card)
