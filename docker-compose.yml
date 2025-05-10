@@ -3,8 +3,10 @@ services:
   installer:
     image: gnublin-installer
     build: .
+    network_mode: host
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix  # x11 socket to get gui
+      - ~/.Xauthority:/root/.Xauthority
     environment:
       - DISPLAY
     privileged: true                   # to access hw (sd-card)
